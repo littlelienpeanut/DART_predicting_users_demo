@@ -166,6 +166,7 @@ def main():
 
     #knn
     #age
+    
     class_num = []
     knn_v4_age = KNeighborsClassifier(n_neighbors = 16)
     tr_x, te_x, tr_y, te_y = train_test_split(data_v4, user_label_age, test_size = 0.2, random_state=42)
