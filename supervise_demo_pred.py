@@ -166,22 +166,11 @@ def main():
 
     #knn
     #age
-    
     class_num = []
     knn_v4_age = KNeighborsClassifier(n_neighbors = 16)
     tr_x, te_x, tr_y, te_y = train_test_split(data_v4, user_label_age, test_size = 0.2, random_state=42)
     class_num = get_class_num(te_y)
     knn_v4_age.fit(tr_x, tr_y)
-    print(class_num)
-    y_score = knn_v4_age.predict_proba(te_x)
-    y_score = np.array(y_score[:,1])
-    te_y = np.asarray(te_y)
-    knn_v4_age_fpr = dict()
-    knn_v4_age_tpr = dict()
-    knn_v4_age_roc_auc = dict()
-    for i in range(class_num):
-        knn_v4_age_fpr[i], knn_v4_age_tpr[i], _ = roc_curve(te_y[:, i], y_score[:, i])
-        knn_v4_age_roc_auc[i] = auc(knn_v4_age_fpr[i], knn_v4_age_tpr[i])
     print(knn_v4_age_fpr)
     print(knn_v4_age_tpr)
 
