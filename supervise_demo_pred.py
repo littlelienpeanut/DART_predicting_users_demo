@@ -11,6 +11,7 @@ from sklearn.metrics import roc_curve
 from sklearn.metrics import auc
 import matplotlib.pyplot as plt
 import numpy as np
+from sklearn import svm
 
 
 def load_data_v4(usernum):
@@ -203,15 +204,154 @@ def main():
     """
 
     #knn
-    #age
-    class_num = []
+    #age_v4
     age_class_name = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"]
-    knn_v4_age = KNeighborsClassifier(n_neighbors = 16)
+    knn_v4_age = KNeighborsClassifier(n_neighbors = 7)
     knn_v4_age_pred = cross_val_predict(knn_v4_age, data_v4, user_label_age, cv=5)
-    print(knn_v4_age_pred)
     cnf_matrix = confusion_matrix(user_label_age, knn_v4_age_pred)
+    #plt.figure()
+    #plot_confusion_matrix(cnf_matrix, classes=age_class_name, normalize=True, title='knn_v4_age with k = 7')
+
+    #age_v5
+    knn_v5_age = KNeighborsClassifier(n_neighbors = 9)
+    knn_v5_age_pred = cross_val_predict(knn_v5_age, data_v5, user_label_age, cv=5)
+    cnf_matrix = confusion_matrix(user_label_age, knn_v5_age_pred)
+    #plt.figure()
+    #plot_confusion_matrix(cnf_matrix, classes=age_class_name, normalize=True, title='knn_v5_age with k = 9')
+
+    #gender_v4
+    gender_class_name = ["1", "2", "3"]
+    knn_v4_gender = KNeighborsClassifier(n_neighbors = 15)
+    knn_v4_gender_pred = cross_val_predict(knn_v4_gender, data_v4, user_label_gender, cv=5)
+    cnf_matrix = confusion_matrix(user_label_gender, knn_v4_gender_pred)
     plt.figure()
-    plot_confusion_matrix(cnf_matrix, classes=age_class_name, normalize=True, title='Confusion matrix, without normalization')
+    plot_confusion_matrix(cnf_matrix, classes=gender_class_name, normalize=True, title='knn_v4_gender with k = 15')
+
+    #gender_v5
+    knn_v5_gender = KNeighborsClassifier(n_neighbors = 1)
+    knn_v5_gender_pred = cross_val_predict(knn_v5_gender, data_v5, user_label_gender, cv=5)
+    cnf_matrix = confusion_matrix(user_label_gender, knn_v5_gender_pred)
+    #plt.figure()
+    #plot_confusion_matrix(cnf_matrix, classes=gender_class_name, normalize=True, title='knn_v5_gender with k = 1')
+
+    #gender_v4
+    relationship_class_name = ["1", "2", "3", "4", "5"]
+    knn_v4_relationship = KNeighborsClassifier(n_neighbors = 1)
+    knn_v4_relationship_pred = cross_val_predict(knn_v4_relationship, data_v4, user_label_relationship, cv=5)
+    cnf_matrix = confusion_matrix(user_label_relationship, knn_v4_relationship_pred)
+    #plt.figure()
+    #plot_confusion_matrix(cnf_matrix, classes=relationship_class_name, normalize=True, title='knn_v4_relationship with k = 1')
+
+    #gender_v5
+    knn_v5_relationship = KNeighborsClassifier(n_neighbors = 5)
+    knn_v5_relationship_pred = cross_val_predict(knn_v5_relationship, data_v5, user_label_relationship, cv=5)
+    cnf_matrix = confusion_matrix(user_label_relationship, knn_v5_relationship_pred)
+    #plt.figure()
+    #plot_confusion_matrix(cnf_matrix, classes=relationship_class_name, normalize=True, title='knn_v5_relationship with k = 1')
+
+    #income_v4
+    income_class_name = ["1", "2", "3", "4", "5", "6", "7", "8"]
+    knn_v4_income = KNeighborsClassifier(n_neighbors = 4)
+    knn_v4_income_pred = cross_val_predict(knn_v4_income, data_v4, user_label_income, cv=5)
+    cnf_matrix = confusion_matrix(user_label_income, knn_v4_income_pred)
+    #plt.figure()
+    #plot_confusion_matrix(cnf_matrix, classes=income_class_name, normalize=True, title='knn_v4_income with k = 4')
+
+    #income_v5
+    knn_v5_income = KNeighborsClassifier(n_neighbors = 7)
+    knn_v5_income_pred = cross_val_predict(knn_v5_income, data_v5, user_label_income, cv=5)
+    cnf_matrix = confusion_matrix(user_label_income, knn_v5_income_pred)
+    #plt.figure()
+    #plot_confusion_matrix(cnf_matrix, classes=income_class_name, normalize=True, title='knn_v5_income with k = 7')
+
+    #edu_v4
+    edu_class_name = ["1", "2", "3", "4", "5", "7"]
+    knn_v4_edu = KNeighborsClassifier(n_neighbors = 4)
+    knn_v4_edu_pred = cross_val_predict(knn_v4_edu, data_v4, user_label_edu, cv=5)
+    cnf_matrix = confusion_matrix(user_label_edu, knn_v4_edu_pred)
+    #plt.figure()
+    #plot_confusion_matrix(cnf_matrix, classes=edu_class_name, normalize=True, title='knn_v4_user_label_edu with k = 4')
+
+    #income_v5
+    knn_v5_edu = KNeighborsClassifier(n_neighbors = 12)
+    knn_v5_edu_pred = cross_val_predict(knn_v5_edu, data_v5, user_label_edu, cv=5)
+    cnf_matrix = confusion_matrix(user_label_edu, knn_v5_edu_pred)
+    #plt.figure()
+    #plot_confusion_matrix(cnf_matrix, classes=edu_class_name, normalize=True, title='knn_v5_user_label_edu with k = 12')
+
+
+    #svm
+    #age_v4
+    svm_v4_age = svm.SVC()
+    svm_v4_age_pred = cross_val_predict(svm_v4_age, data_v4, user_label_age, cv=5)
+    cnf_matrix = confusion_matrix(user_label_age, svm_v4_age_pred)
+    #plt.figure()
+    #plot_confusion_matrix(cnf_matrix, classes=age_class_name, normalize=True, title='SVM_v4_age')
+
+    #age_v5
+    svm_v5_age = svm.SVC()
+    svm_v5_age_pred = cross_val_predict(svm_v5_age, data_v5, user_label_age, cv=5)
+    cnf_matrix = confusion_matrix(user_label_age, svm_v5_age_pred)
+    #plt.figure()
+    #plot_confusion_matrix(cnf_matrix, classes=age_class_name, normalize=True, title='SVM_v5_age')
+
+
+    #gender_v4
+    svm_v4_gender = svm.SVC()
+    svm_v4_gender_pred = cross_val_predict(svm_v4_gender, data_v4, user_label_gender, cv=5)
+    cnf_matrix = confusion_matrix(user_label_gender, svm_v4_gender_pred)
+    plt.figure()
+    plot_confusion_matrix(cnf_matrix, classes=gender_class_name, normalize=True, title='SVM_v4_gender')
+
+    #gender_v5
+    svm_v5_gender = svm.SVC()
+    svm_v5_gender_pred = cross_val_predict(svm_v5_gender, data_v5, user_label_gender, cv=5)
+    cnf_matrix = confusion_matrix(user_label_gender, svm_v5_gender_pred)
+    #plt.figure()
+    #plot_confusion_matrix(cnf_matrix, classes=gender_class_name, normalize=True, title='SVM_v5_gender')
+
+    #relationship_v4
+    svm_v4_relationship = svm.SVC()
+    svm_v4_relationship_pred = cross_val_predict(svm_v4_relationship, data_v4, user_label_relationship, cv=5)
+    cnf_matrix = confusion_matrix(user_label_relationship, svm_v4_relationship_pred)
+    #plt.figure()
+    #plot_confusion_matrix(cnf_matrix, classes=relationship_class_name, normalize=True, title='SVM_v4_relationship')
+
+    #relationship_v5
+    svm_v5_relationship = svm.SVC()
+    svm_v5_relationship_pred = cross_val_predict(svm_v5_relationship, data_v5, user_label_relationship, cv=5)
+    cnf_matrix = confusion_matrix(user_label_relationship, svm_v5_relationship_pred)
+    #plt.figure()
+    #plot_confusion_matrix(cnf_matrix, classes=relationship_class_name, normalize=True, title='SVM_v5_relationship')
+
+    #income_v4
+    svm_v4_income = svm.SVC()
+    svm_v4_income_pred = cross_val_predict(svm_v4_income, data_v4, user_label_income, cv=5)
+    cnf_matrix = confusion_matrix(user_label_income, svm_v4_income_pred)
+    #plt.figure()
+    #plot_confusion_matrix(cnf_matrix, classes=income_class_name, normalize=True, title='SVM_v4_income')
+
+    #income_v5
+    svm_v5_income = svm.SVC()
+    svm_v5_income_pred = cross_val_predict(svm_v5_income, data_v5, user_label_income, cv=5)
+    cnf_matrix = confusion_matrix(user_label_income, svm_v5_income_pred)
+    #plt.figure()
+    #plot_confusion_matrix(cnf_matrix, classes=income_class_name, normalize=True, title='SVM_v5_income')
+
+    #edu_v4
+    svm_v4_edu = svm.SVC()
+    svm_v4_edu_pred = cross_val_predict(svm_v4_edu, data_v4, user_label_edu, cv=5)
+    cnf_matrix = confusion_matrix(user_label_edu, svm_v4_edu_pred)
+    #plt.figure()
+    #plot_confusion_matrix(cnf_matrix, classes=edu_class_name, normalize=True, title='SVM_v4_edu')
+
+    #edu_v5
+    svm_v5_edu = svm.SVC()
+    svm_v5_edu_pred = cross_val_predict(svm_v5_edu, data_v5, user_label_edu, cv=5)
+    cnf_matrix = confusion_matrix(user_label_edu, svm_v5_edu_pred)
+    #plt.figure()
+    #plot_confusion_matrix(cnf_matrix, classes=edu_class_name, normalize=True, title='SVM_v5_edu')
+
     plt.show()
 
 
