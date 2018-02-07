@@ -1,9 +1,9 @@
 import pandas as pd
 import itertools
 import csv
-from sklearn.neighbors import KNeighborsClassifier
 import random
 from sklearn.cross_validation import train_test_split
+from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import cross_val_predict
 from sklearn.model_selection import cross_val_score
 from sklearn.metrics import confusion_matrix
@@ -62,3 +62,39 @@ def choose_user():
                 pass
 
     return usernum
+
+def load_pr():
+    csv = pd.read_csv("user_pr.csv")
+    #big6
+    HH = []
+    Emo = []
+    Ext = []
+    Agr = []
+    Con = []
+    Ope = []
+    for i in range(len(csv)):
+        HH.append(csv["HH"][i])
+        Emo.append(csv["Emo"][i])
+        Ext.append(csv["Ext"][i])
+        Agr.append(csv["Agr"][i])
+        Con.append(csv["Con"][i])
+        Ope.append(csv["Ope"][i])
+
+    return HH, Emo, Ext, Agr, Con, Ope
+
+
+def main():
+    #variable
+    usernum = choose_user()
+    data_v4 = load_data_v4(usernum)
+    data_v5 = load_data_v5(usernum)
+    #big6
+    HH, Emo, Ext, Agr, Con, Ope = load_pr()
+
+    #main
+    clf_log = LogisticRegression(C = 2.0)
+    clf_log_pred = cross_val_predict(clf_log, data_v4, HH, cv=5)
+
+
+if __name__ == '__main__':
+    main()

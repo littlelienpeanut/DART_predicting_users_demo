@@ -117,35 +117,91 @@ def get_class_num(te_y):
 
     return tmp_list
 
+def recall(cnf):
+    recall = []
+    for i in range(len(cnf[0])):
+        tmp_recall = float(cnf[i][i]) / float(sum(cnf[i]))
+        recall.append("%.2f" % tmp_recall)
+
+    return recall
+
+def precision(cnf, oc):
+    precision = []
+    for i in range(len(cnf[0])):
+        tmp = 0
+        pre = 0
+        for j in range(len(cnf[0])):
+            tmp += cnf[j][i]
+        if tmp == 0:
+            tmp += 1
+
+        pre = float(cnf[i][i]) / float(tmp)
+        precision.append("%.2f" % pre)
+    precision.append("%.2f" % oc)
+
+    return precision
+
 def plot_confusion_matrix(cm, classes,
                           normalize=False,
                           title='Confusion matrix',
                           cmap=plt.cm.Blues):
-    """
-    This function prints and plots the confusion matrix.
-    Normalization can be applied by setting `normalize=True`.
-    """
+    #compute overall accuracy
+    oc = 0
+    total = 0
+    tmp_acc = 0
+    for cm_i in range(len(cm)):
+        tmp_acc += cm[cm_i][cm_i]
+        for cm_j in range(len(cm)):
+            total += cm[cm_i][cm_j]
+    oc = float(tmp_acc) / float(total)
+
+    tmp_recall = np.array(recall(cm))
+    tmp_recall = tmp_recall.astype(float)
+    tmp_precision =  np.array(precision(cm, oc))
+    tmp_precision = tmp_precision.astype(float)
+    cm_nn = cm
     if normalize:
         cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-        print("Normalized confusion matrix")
     else:
-        print('Confusion matrix, without normalization')
+        pass
 
-    print(cm)
+    tmp_recall = tmp_recall[:, np.newaxis]
+    cm = np.hstack((cm, tmp_recall))
+    cm = np.vstack((cm, tmp_precision))
+
+    class_x = []
+    class_y = []
 
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
     plt.title(title)
     plt.colorbar()
-    tick_marks = np.arange(len(classes))
+    tick_marks = np.arange(len(classes)+1)
+    #add recall tick
+    classes.append("recall")
     plt.xticks(tick_marks, classes, rotation=45)
+    #delete recall tick
+    classes.pop(len(classes)-1)
+    #add precision tick
+    classes.append("precision")
     plt.yticks(tick_marks, classes)
+    #delete precision tick
+    classes.pop(len(classes)-1)
 
-    fmt = '.2f' if normalize else 'd'
+    fmt = '2.1%' if normalize else 'd'
     thresh = cm.max() / 2.
     for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
         plt.text(j, i, format(cm[i, j], fmt),
-                 horizontalalignment="center",
-                 color="white" if cm[i, j] > thresh else "black")
+                 horizontalalignment='center',
+                 verticalalignment='bottom',
+                 color="black")
+        if i<cm.shape[0]-1 and j<cm.shape[0]-1:
+            plt.text(j, i, cm_nn[i, j],
+                 weight = 'bold',
+                 horizontalalignment='center',
+                 verticalalignment='top',
+                 color="black")
+        else:
+            pass
 
     plt.tight_layout()
     plt.ylabel('True label')
@@ -300,8 +356,9 @@ def main():
     svm_v4_gender = svm.SVC()
     svm_v4_gender_pred = cross_val_predict(svm_v4_gender, data_v4, user_label_gender, cv=5)
     cnf_matrix = confusion_matrix(user_label_gender, svm_v4_gender_pred)
-    plt.figure()
-    plot_confusion_matrix(cnf_matrix, classes=gender_class_name, normalize=True, title='SVM_v4_gender')
+    #plt.figure()
+    #plot_confusion_matrix(cnf_matrix, classes=gender_class_name, normalize=True, title='SVM_v4_gender')
+
 
     #gender_v5
     svm_v5_gender = svm.SVC()
