@@ -16,6 +16,8 @@ import numpy as np
 from sklearn import svm
 from sklearn.metrics import mean_squared_error
 from math import sqrt
+from sklearn.learning_curve import learning_curve
+from sklearn.metrics import mean_squared_error
 
 
 def load_data_v4(usernum):
@@ -26,9 +28,9 @@ def load_data_v4(usernum):
         tmp_list = np.array(tmp_list)
         data = pd.read_csv(fname + "_daily_v4.csv")
         for j in range(0, 24, 1):
-            tmp_list = np.append(tmp_list, "%.3f" % float(data["ratio"][j]))
+            tmp_list = np.append(tmp_list, "%.3f" % data["ratio"][j])
 
-        tmp_list.dtype = 'float64'
+        tmp_list.dtype = 'float'
         daily_v4.append(tmp_list)
 
     return daily_v4
@@ -107,19 +109,20 @@ def main():
     usernum = choose_user()
     data_v4 = load_data_v4(usernum)
     data_v5 = load_data_v5(usernum)
+    rmse = []
     #big6
     print("Loading pr_info")
     HH, Emo, Ext, Agr, Con, Ope = load_pr()
 
     #main
-    clf_log = linear_model.LinearRegression()
-    clf_log_pred = cross_val_predict(clf_log, data_v5, HH, cv=3)
-    #print(data_v5)
-    #input()
-    #print(HH)
-    #input()
-    print(clf_log_pred)
+    for k in range(1, 20, 1):
+        clf_knn = KNeighborsClassifier(n_neighbors = k)
+        #cuz loss is a negative number, so must to add a minus
+        loss = -cross_val_score(clf_knn, data_v4, HH, cv=5, scoring='mean_squared_error')
+        mse = loss.mean()
+        rmse.append(sqrt(mse))
 
+    print(rmse)
 
 if __name__ == '__main__':
     main()
