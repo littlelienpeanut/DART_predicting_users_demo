@@ -21,7 +21,7 @@ def load_data_v4(usernum):
         tmp_list = []
         data = pd.read_csv(fname + "_daily_v4.csv")
         for j in range(0, 24, 1):
-            tmp_list.append( "%.3f" % data["ratio"][j])
+            tmp_list.append(data["ratio"][j])
         daily_v4.append(tmp_list)
 
     return daily_v4
@@ -34,7 +34,7 @@ def load_data_v5(usernum):
         tmp_list = []
         data = pd.read_csv(fname + "_daily_v5.csv")
         for cate in cate_list:
-            tmp_list.append( "%.3f" % data[cate][0])
+            tmp_list.append(data[cate][0])
         daily_v5.append(tmp_list)
 
     return daily_v5
@@ -121,7 +121,7 @@ def recall(cnf):
     recall = []
     for i in range(len(cnf[0])):
         tmp_recall = float(cnf[i][i]) / float(sum(cnf[i]))
-        recall.append("%.2f" % tmp_recall)
+        recall.append(tmp_recall)
 
     return recall
 
@@ -136,8 +136,8 @@ def precision(cnf, oc):
             tmp += 1
 
         pre = float(cnf[i][i]) / float(tmp)
-        precision.append("%.2f" % pre)
-    precision.append("%.2f" % oc)
+        precision.append(pre)
+    precision.append(oc)
 
     return precision
 
@@ -280,8 +280,8 @@ def main():
     knn_v4_gender = KNeighborsClassifier(n_neighbors = 15)
     knn_v4_gender_pred = cross_val_predict(knn_v4_gender, data_v4, user_label_gender, cv=5)
     cnf_matrix = confusion_matrix(user_label_gender, knn_v4_gender_pred)
-    plt.figure()
-    plot_confusion_matrix(cnf_matrix, classes=gender_class_name, normalize=True, title='knn_v4_gender with k = 15')
+    #plt.figure()
+    #plot_confusion_matrix(cnf_matrix, classes=gender_class_name, normalize=True, title='knn_v4_gender with k = 15')
 
     #gender_v5
     knn_v5_gender = KNeighborsClassifier(n_neighbors = 1)
@@ -348,8 +348,8 @@ def main():
     svm_v5_age = svm.SVC()
     svm_v5_age_pred = cross_val_predict(svm_v5_age, data_v5, user_label_age, cv=5)
     cnf_matrix = confusion_matrix(user_label_age, svm_v5_age_pred)
-    #plt.figure()
-    #plot_confusion_matrix(cnf_matrix, classes=age_class_name, normalize=True, title='SVM_v5_age')
+    plt.figure()
+    plot_confusion_matrix(cnf_matrix, classes=age_class_name, normalize=True, title='SVM_v5_age')
 
 
     #gender_v4
