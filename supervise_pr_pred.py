@@ -41,7 +41,7 @@ def load_data_v5(usernum):
         data = pd.read_csv(fname + "_daily_v5.csv")
         for cate in cate_list:
             tmp_list.append(float(data[cate][0]))
-            
+
         daily_v5.append(tmp_list)
 
     return daily_v5
@@ -104,13 +104,23 @@ def sqrt_list(loss):
 
     return tmp_list
 
+def rmse_mean(pr):
+    mean = np.mean(pr)
+    mean = float('%.2f' % (mean))
+    mse = np.mean(np.square(pr - mean))
+    rmse = np.sqrt(mse)
+
+    return rmse
+
 def main():
     #variable
     print("Loading users' info")
     usernum = choose_user()
     data_v4 = load_data_v4(usernum)
     data_v5 = load_data_v5(usernum)
-    rmse = []
+    pr_list = ['HH', 'Emo', 'Ext', 'Agr', 'Con', 'Ope']
+    rmse_pred = {'HH':0, 'Emo':0, 'Ext':0, 'Agr':0, 'Con':0, 'Ope':0}
+    rmse_base = {'HH':0, 'Emo':0, 'Ext':0, 'Agr':0, 'Con':0, 'Ope':0}
     mse = []
     #big6
     print("Loading pr_info")
@@ -132,17 +142,87 @@ def main():
     '''
 
     #LogisticRegression
+    '''
     clf_log = LogisticRegression()
     clf_log_pred = cross_val_predict(clf_log, data_v4, HH, cv=5)
     print(clf_log_pred)
-
     '''
+
+    #HH, Emo, Ext, Agr, Con, Ope
+    clf_log = linear_model.LinearRegression()
     loss = -cross_val_score(clf_log, data_v4, HH, cv=5, scoring='mean_squared_error')
     loss = sqrt_list(loss)
-    rmse = np.mean(loss)
-    print(rmse)
+    rmse_pred['HH'] = "%.3f" % np.mean(loss)
+    rmse_base['HH'] = "%.3f" % rmse_mean(HH)
+
+    loss = -cross_val_score(clf_log, data_v4, Emo, cv=5, scoring='mean_squared_error')
+    loss = sqrt_list(loss)
+    rmse_pred['Emo'] = "%.3f" % np.mean(loss)
+    rmse_base['Emo'] = "%.3f" % rmse_mean(Emo)
+
+    loss = -cross_val_score(clf_log, data_v4, Ext, cv=5, scoring='mean_squared_error')
+    loss = sqrt_list(loss)
+    rmse_pred['Ext'] = "%.3f" % np.mean(loss)
+    rmse_base['Ext'] = "%.3f" % rmse_mean(Ext)
+
+    loss = -cross_val_score(clf_log, data_v4, Agr, cv=5, scoring='mean_squared_error')
+    loss = sqrt_list(loss)
+    rmse_pred['Agr'] = "%.3f" % np.mean(loss)
+    rmse_base['Agr'] = "%.3f" % rmse_mean(Agr)
+
+    loss = -cross_val_score(clf_log, data_v4, Con, cv=5, scoring='mean_squared_error')
+    loss = sqrt_list(loss)
+    rmse_pred['Con'] = "%.3f" % np.mean(loss)
+    rmse_base['Con'] = "%.3f" % rmse_mean(Con)
+
+    loss = -cross_val_score(clf_log, data_v4, Ope, cv=5, scoring='mean_squared_error')
+    loss = sqrt_list(loss)
+    rmse_pred['Ope'] = "%.3f" % np.mean(loss)
+    rmse_base['Ope'] = "%.3f" % rmse_mean(Ope)
+
+    print("rmse of data_v4 in pr_list")
+    for pr in pr_list:
+        print(rmse_pred[pr])
+
+    print("")
+    print("rmse of mean of pr")
+    for pr in pr_list:
+        print(rmse_base[pr])
+
     '''
 
+
+    #HH, Emo, Ext, Agr, Con, Ope
+    clf_log = LogisticRegression()
+    loss = -cross_val_score(clf_log, data_v5, HH, cv=5, scoring='mean_squared_error')
+    loss = sqrt_list(loss)
+    rmse_pred['HH'] = "%.3f" % np.mean(loss)
+
+    loss = -cross_val_score(clf_log, data_v5, Emo, cv=5, scoring='mean_squared_error')
+    loss = sqrt_list(loss)
+    rmse_pred['Emo'] = "%.3f" % np.mean(loss)
+
+    loss = -cross_val_score(clf_log, data_v5, Ext, cv=5, scoring='mean_squared_error')
+    loss = sqrt_list(loss)
+    rmse_pred['Ext'] = "%.3f" % np.mean(loss)
+
+    loss = -cross_val_score(clf_log, data_v5, Agr, cv=5, scoring='mean_squared_error')
+    loss = sqrt_list(loss)
+    rmse_pred['Agr'] = "%.3f" % np.mean(loss)
+
+    loss = -cross_val_score(clf_log, data_v5, Con, cv=5, scoring='mean_squared_error')
+    loss = sqrt_list(loss)
+    rmse_pred['Con'] = "%.3f" % np.mean(loss)
+
+    loss = -cross_val_score(clf_log, data_v5, Ope, cv=5, scoring='mean_squared_error')
+    loss = sqrt_list(loss)
+    rmse_pred['Ope'] = "%.3f" % np.mean(loss)
+
+    print("rmse of data_v5 in pr_list")
+    print(rmse_pred)
+    print("rmse of mean of pr")
+    print(rmse_base)
+    '''
 
 if __name__ == '__main__':
     main()
