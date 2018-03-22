@@ -117,7 +117,6 @@ def sqrt_list(loss):
 
 def rmse_mean(pr):
     rmse = []
-
     split_ind = [0, 103, 206, 309, 412, 513]
     for i in range(len(split_ind)-1):
         test = []
@@ -139,6 +138,40 @@ def rmse_mean(pr):
 
     return output
 
+def cv_training_rmse(clf, data, label):
+    rmse = []
+    split_ind = [0, 103, 206, 309, 412, 513]
+    for i in range(len(split_ind)-1):
+        tr_x = []
+        tr_y = []
+        te_x = []
+        te_y = []
+        for j in range(len(data)):
+            if j >= split_ind[i] and j <= split_ind[i+1] - 1:
+                te_x.append(data[j])
+                te_y.append(label[j])
+            else:
+                tr_x.append(data[j])
+                tr_y.append(label[j])
+
+        tr_clf = clf.fit(tr_x, tr_y)
+        tr_pred = tr_clf.predict(tr_x)
+        # print(tr_pred)
+        # print("")
+        # print(tr_y)
+        # input()
+        for tr_i in range(len(tr_y)):
+            tr_y[tr_i] = tr_y[tr_i] - tr_pred[tr_i]
+        tr_y = np.asarray(tr_y)
+        mse = np.mean(np.square(tr_y))
+        rmse.append(np.sqrt(mse))
+
+    rmse = np.asarray(rmse)
+    output = np.mean(rmse)
+
+    return output
+
+
 
 def main():
     #variable
@@ -150,6 +183,7 @@ def main():
     pr_list = ['HH', 'Emo', 'Ext', 'Agr', 'Con', 'Ope']
     rmse_pred = {'HH':0, 'Emo':0, 'Ext':0, 'Agr':0, 'Con':0, 'Ope':0}
     rmse_base = {'HH':0, 'Emo':0, 'Ext':0, 'Agr':0, 'Con':0, 'Ope':0}
+    rmse_tr = {'HH':0, 'Emo':0, 'Ext':0, 'Agr':0, 'Con':0, 'Ope':0}
     mse = []
     #big6
     print("Loading pr_info")
@@ -221,40 +255,51 @@ def main():
     '''
 
     #HH, Emo, Ext, Agr, Con, Ope
-    clf_log = linear_model.LinearRegression()
+    clf_log = LogisticRegression()
     loss = -cross_val_score(clf_log, data_v5, HH, cv=5, scoring='mean_squared_error')
     loss = sqrt_list(loss)
     rmse_pred['HH'] = "%.3f" % np.mean(loss)
     rmse_base['HH'] = "%.3f" % rmse_mean(HH)
+    rmse_tr['HH'] = "%.3f" % cv_training_rmse(clf_log, data_v5, HH)
 
     loss = -cross_val_score(clf_log, data_v5, Emo, cv=5, scoring='mean_squared_error')
     loss = sqrt_list(loss)
     rmse_pred['Emo'] = "%.3f" % np.mean(loss)
     rmse_base['Emo'] = "%.3f" % rmse_mean(Emo)
+    rmse_tr['Emo'] = "%.3f" % cv_training_rmse(clf_log, data_v5, Emo)
 
     loss = -cross_val_score(clf_log, data_v5, Ext, cv=5, scoring='mean_squared_error')
     loss = sqrt_list(loss)
     rmse_pred['Ext'] = "%.3f" % np.mean(loss)
     rmse_base['Ext'] = "%.3f" % rmse_mean(Ext)
+    rmse_tr['Ext'] = "%.3f" % cv_training_rmse(clf_log, data_v5, Ext)
 
     loss = -cross_val_score(clf_log, data_v5, Agr, cv=5, scoring='mean_squared_error')
     loss = sqrt_list(loss)
     rmse_pred['Agr'] = "%.3f" % np.mean(loss)
     rmse_base['Agr'] = "%.3f" % rmse_mean(Agr)
+    rmse_tr['Agr'] = "%.3f" % cv_training_rmse(clf_log, data_v5, Agr)
 
     loss = -cross_val_score(clf_log, data_v5, Con, cv=5, scoring='mean_squared_error')
     loss = sqrt_list(loss)
     rmse_pred['Con'] = "%.3f" % np.mean(loss)
     rmse_base['Con'] = "%.3f" % rmse_mean(Con)
+    rmse_tr['Con'] = "%.3f" % cv_training_rmse(clf_log, data_v5, Con)
 
     loss = -cross_val_score(clf_log, data_v5, Ope, cv=5, scoring='mean_squared_error')
     loss = sqrt_list(loss)
     rmse_pred['Ope'] = "%.3f" % np.mean(loss)
     rmse_base['Ope'] = "%.3f" % rmse_mean(Ope)
+    rmse_tr['Ope'] = "%.3f" % cv_training_rmse(clf_log, data_v5, Ope)
 
     print("rmse of data_v5 in pr_list")
     for pr in pr_list:
         print(rmse_pred[pr])
+
+    print("")
+    print("rmse of data_v5 training")
+    for pr in pr_list:
+        print(rmse_tr[pr])
 
     print("")
     print("rmse of mean of pr")
