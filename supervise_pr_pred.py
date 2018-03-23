@@ -1,6 +1,7 @@
 import pandas as pd
 import itertools
 import csv
+from sklearn.linear_model import Ridge
 import random
 from sklearn.cross_validation import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
@@ -15,6 +16,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn import svm
 from sklearn.metrics import mean_squared_error
+import matplotlib.pyplot as plt
 from math import sqrt
 from sklearn.learning_curve import learning_curve
 from sklearn.metrics import mean_squared_error
@@ -171,6 +173,36 @@ def cv_training_rmse(clf, data, label):
 
     return output
 
+def cv_testing_rmse(clf, data, label):
+    rmse = []
+    split_ind = [0, 103, 206, 309, 412, 513]
+    for i in range(len(split_ind)-1):
+        tr_x = []
+        tr_y = []
+        te_x = []
+        te_y = []
+        for j in range(len(data)):
+            if j >= split_ind[i] and j <= split_ind[i+1] - 1:
+                te_x.append(data[j])
+                te_y.append(label[j])
+            else:
+                tr_x.append(data[j])
+                tr_y.append(label[j])
+
+        tr_clf = clf.fit(tr_x, tr_y)
+        te_pred = tr_clf.predict(te_x)
+        #print(te_pred)
+        for tr_i in range(len(te_y)):
+            te_y[tr_i] = te_y[tr_i] - te_pred[tr_i]
+        te_y = np.asarray(te_y)
+        mse = np.mean(np.square(te_y))
+        rmse.append(np.sqrt(mse))
+
+    rmse = np.asarray(rmse)
+    output = np.mean(rmse)
+
+    return output
+
 
 
 def main():
@@ -181,9 +213,10 @@ def main():
     data_v5 = load_data_v5(usernum)
     data_all = load_data_all(data_v4, data_v5)
     pr_list = ['HH', 'Emo', 'Ext', 'Agr', 'Con', 'Ope']
-    rmse_pred = {'HH':0, 'Emo':0, 'Ext':0, 'Agr':0, 'Con':0, 'Ope':0}
-    rmse_base = {'HH':0, 'Emo':0, 'Ext':0, 'Agr':0, 'Con':0, 'Ope':0}
-    rmse_tr = {'HH':0, 'Emo':0, 'Ext':0, 'Agr':0, 'Con':0, 'Ope':0}
+    rmse_pred = {'HH':[], 'Emo':[], 'Ext':[], 'Agr':[], 'Con':[], 'Ope':[]}
+    rmse_base = {'HH':[], 'Emo':[], 'Ext':[], 'Agr':[], 'Con':[], 'Ope':[]}
+    rmse_tr = {'HH':[], 'Emo':[], 'Ext':[], 'Agr':[], 'Con':[], 'Ope':[]}
+
     mse = []
     #big6
     print("Loading pr_info")
@@ -206,47 +239,48 @@ def main():
 
     #LogisticRegression
     '''
-    clf_log = LogisticRegression()
-    clf_log_pred = cross_val_predict(clf_log, data_v4, HH, cv=5)
-    print(clf_log_pred)
+    clf = LogisticRegression()
+    clf_pred = cross_val_predict(clf, data_v4, HH, cv=5)
+    print(clf_pred)
     '''
 
     #HH, Emo, Ext, Agr, Con, Ope
     '''
-    clf_log = linear_model.LinearRegression(n_jobs=-1)
-    loss = -cross_val_score(clf_log, data_v4, HH, cv=5, scoring='mean_squared_error')
-    loss = sqrt_list(loss)
-    rmse_pred['HH'] = "%.3f" % np.mean(loss)
+    clf = svm.SVC()
+    rmse_pred['HH'] = "%.3f" % cv_testing_rmse(clf, data_v4, HH)
     rmse_base['HH'] = "%.3f" % rmse_mean(HH)
+    rmse_tr['HH'] = "%.3f" % cv_training_rmse(clf, data_v4, HH)
 
-    loss = -cross_val_score(clf_log, data_v4, Emo, cv=5, scoring='mean_squared_error')
-    loss = sqrt_list(loss)
-    rmse_pred['Emo'] = "%.3f" % np.mean(loss)
+    rmse_pred['Emo'] = "%.3f" % cv_testing_rmse(clf, data_v4, Emo)
     rmse_base['Emo'] = "%.3f" % rmse_mean(Emo)
+    rmse_tr['Emo'] = "%.3f" % cv_training_rmse(clf, data_v4, Emo)
 
-    loss = -cross_val_score(clf_log, data_v4, Ext, cv=5, scoring='mean_squared_error')
-    loss = sqrt_list(loss)
-    rmse_pred['Ext'] = "%.3f" % np.mean(loss)
+    rmse_pred['Ext'] = "%.3f" % cv_testing_rmse(clf, data_v4, Ext)
     rmse_base['Ext'] = "%.3f" % rmse_mean(Ext)
+    rmse_tr['Ext'] = "%.3f" % cv_training_rmse(clf, data_v4, Ext)
 
-    loss = -cross_val_score(clf_log, data_v4, Agr, cv=5, scoring='mean_squared_error')
-    loss = sqrt_list(loss)
-    rmse_pred['Agr'] = "%.3f" % np.mean(loss)
+    rmse_pred['Agr'] = "%.3f" % cv_testing_rmse(clf, data_v4, Agr)
     rmse_base['Agr'] = "%.3f" % rmse_mean(Agr)
+    rmse_tr['Agr'] = "%.3f" % cv_training_rmse(clf, data_v4, Agr)
 
-    loss = -cross_val_score(clf_log, data_v4, Con, cv=5, scoring='mean_squared_error')
-    loss = sqrt_list(loss)
-    rmse_pred['Con'] = "%.3f" % np.mean(loss)
+    rmse_pred['Con'] = "%.3f" % cv_testing_rmse(clf, data_v4, Con)
     rmse_base['Con'] = "%.3f" % rmse_mean(Con)
+    rmse_tr['Con'] = "%.3f" % cv_training_rmse(clf, data_v4, Con)
 
-    loss = -cross_val_score(clf_log, data_v4, Ope, cv=5, scoring='mean_squared_error')
-    loss = sqrt_list(loss)
-    rmse_pred['Ope'] = "%.3f" % np.mean(loss)
+    rmse_pred['Ope'] = "%.3f" % cv_testing_rmse(clf, data_v4, Ope)
     rmse_base['Ope'] = "%.3f" % rmse_mean(Ope)
+    rmse_tr['Ope'] = "%.3f" % cv_training_rmse(clf, data_v4, Ope)
 
-    print("rmse of data_v4 in pr_list")
+    print("rmse of data_v4 in testing")
     for pr in pr_list:
         print(rmse_pred[pr])
+
+
+    print("")
+    print("rmse of data_v4 training")
+    for pr in pr_list:
+        print(rmse_tr[pr])
+
 
     print("")
     print("rmse of mean of pr")
@@ -255,44 +289,33 @@ def main():
     '''
 
     #HH, Emo, Ext, Agr, Con, Ope
-    clf_log = LogisticRegression()
-    loss = -cross_val_score(clf_log, data_v5, HH, cv=5, scoring='mean_squared_error')
-    loss = sqrt_list(loss)
-    rmse_pred['HH'] = "%.3f" % np.mean(loss)
+    '''
+    clf = LogisticRegression()
+    rmse_pred['HH'] = "%.3f" % cv_testing_rmse(clf, data_v5, HH)
     rmse_base['HH'] = "%.3f" % rmse_mean(HH)
-    rmse_tr['HH'] = "%.3f" % cv_training_rmse(clf_log, data_v5, HH)
+    rmse_tr['HH'] = "%.3f" % cv_training_rmse(clf, data_v5, HH)
 
-    loss = -cross_val_score(clf_log, data_v5, Emo, cv=5, scoring='mean_squared_error')
-    loss = sqrt_list(loss)
-    rmse_pred['Emo'] = "%.3f" % np.mean(loss)
+    rmse_pred['Emo'] = "%.3f" % cv_testing_rmse(clf, data_v5, Emo)
     rmse_base['Emo'] = "%.3f" % rmse_mean(Emo)
-    rmse_tr['Emo'] = "%.3f" % cv_training_rmse(clf_log, data_v5, Emo)
+    rmse_tr['Emo'] = "%.3f" % cv_training_rmse(clf, data_v5, Emo)
 
-    loss = -cross_val_score(clf_log, data_v5, Ext, cv=5, scoring='mean_squared_error')
-    loss = sqrt_list(loss)
-    rmse_pred['Ext'] = "%.3f" % np.mean(loss)
+    rmse_pred['Ext'] = "%.3f" % cv_testing_rmse(clf, data_v5, Ext)
     rmse_base['Ext'] = "%.3f" % rmse_mean(Ext)
-    rmse_tr['Ext'] = "%.3f" % cv_training_rmse(clf_log, data_v5, Ext)
+    rmse_tr['Ext'] = "%.3f" % cv_training_rmse(clf, data_v5, Ext)
 
-    loss = -cross_val_score(clf_log, data_v5, Agr, cv=5, scoring='mean_squared_error')
-    loss = sqrt_list(loss)
-    rmse_pred['Agr'] = "%.3f" % np.mean(loss)
+    rmse_pred['Agr'] = "%.3f" % cv_testing_rmse(clf, data_v5, Agr)
     rmse_base['Agr'] = "%.3f" % rmse_mean(Agr)
-    rmse_tr['Agr'] = "%.3f" % cv_training_rmse(clf_log, data_v5, Agr)
+    rmse_tr['Agr'] = "%.3f" % cv_training_rmse(clf, data_v5, Agr)
 
-    loss = -cross_val_score(clf_log, data_v5, Con, cv=5, scoring='mean_squared_error')
-    loss = sqrt_list(loss)
-    rmse_pred['Con'] = "%.3f" % np.mean(loss)
+    rmse_pred['Con'] = "%.3f" % cv_testing_rmse(clf, data_v5, Con)
     rmse_base['Con'] = "%.3f" % rmse_mean(Con)
-    rmse_tr['Con'] = "%.3f" % cv_training_rmse(clf_log, data_v5, Con)
+    rmse_tr['Con'] = "%.3f" % cv_training_rmse(clf, data_v5, Con)
 
-    loss = -cross_val_score(clf_log, data_v5, Ope, cv=5, scoring='mean_squared_error')
-    loss = sqrt_list(loss)
-    rmse_pred['Ope'] = "%.3f" % np.mean(loss)
+    rmse_pred['Ope'] = "%.3f" % cv_testing_rmse(clf, data_v5, Ope)
     rmse_base['Ope'] = "%.3f" % rmse_mean(Ope)
-    rmse_tr['Ope'] = "%.3f" % cv_training_rmse(clf_log, data_v5, Ope)
+    rmse_tr['Ope'] = "%.3f" % cv_training_rmse(clf, data_v5, Ope)
 
-    print("rmse of data_v5 in pr_list")
+    print("rmse of data_v5 in testing")
     for pr in pr_list:
         print(rmse_pred[pr])
 
@@ -305,49 +328,108 @@ def main():
     print("rmse of mean of pr")
     for pr in pr_list:
         print(rmse_base[pr])
+    '''
 
     #HH, Emo, Ext, Agr, Con, Ope
-    '''
-    clf_log = linear_model.LinearRegression()
-    loss = -cross_val_score(clf_log, data_all, HH, cv=5, scoring='mean_squared_error')
-    loss = sqrt_list(loss)
-    rmse_pred['HH'] = "%.3f" % np.mean(loss)
-    rmse_base['HH'] = "%.3f" % rmse_mean(HH)
+    for alpha_val in range(1, 13, 1):
+        print('epoch = ' + str(alpha_val))
+        clf = Ridge(alpha = alpha_val)
+        rmse_pred['HH'].append("%.3f" % cv_testing_rmse(clf, data_all, HH))
+        rmse_base['HH'].append(5.799)
+        rmse_tr['HH'].append("%.3f" % cv_training_rmse(clf, data_all, HH))
 
-    loss = -cross_val_score(clf_log, data_all, Emo, cv=5, scoring='mean_squared_error')
-    loss = sqrt_list(loss)
-    rmse_pred['Emo'] = "%.3f" % np.mean(loss)
-    rmse_base['Emo'] = "%.3f" % rmse_mean(Emo)
+        rmse_pred['Emo'].append("%.3f" % cv_testing_rmse(clf, data_all, Emo))
+        rmse_base['Emo'].append(5.769)
+        rmse_tr['Emo'].append("%.3f" % cv_training_rmse(clf, data_all, Emo))
 
-    loss = -cross_val_score(clf_log, data_all, Ext, cv=5, scoring='mean_squared_error')
-    loss = sqrt_list(loss)
-    rmse_pred['Ext'] = "%.3f" % np.mean(loss)
-    rmse_base['Ext'] = "%.3f" % rmse_mean(Ext)
+        rmse_pred['Ext'].append("%.3f" % cv_testing_rmse(clf, data_all, Ext))
+        rmse_base['Ext'].append(5.743)
+        rmse_tr['Ext'].append("%.3f" % cv_training_rmse(clf, data_all, Ext))
 
-    loss = -cross_val_score(clf_log, data_all, Agr, cv=5, scoring='mean_squared_error')
-    loss = sqrt_list(loss)
-    rmse_pred['Agr'] = "%.3f" % np.mean(loss)
-    rmse_base['Agr'] = "%.3f" % rmse_mean(Agr)
+        rmse_pred['Agr'].append("%.3f" % cv_testing_rmse(clf, data_all, Agr))
+        rmse_base['Agr'].append(5.608)
+        rmse_tr['Agr'].append("%.3f" % cv_training_rmse(clf, data_all, Agr))
 
-    loss = -cross_val_score(clf_log, data_all, Con, cv=5, scoring='mean_squared_error')
-    loss = sqrt_list(loss)
-    rmse_pred['Con'] = "%.3f" % np.mean(loss)
-    rmse_base['Con'] = "%.3f" % rmse_mean(Con)
+        rmse_pred['Con'].append("%.3f" % cv_testing_rmse(clf, data_all, Con))
+        rmse_base['Con'].append(5.239)
+        rmse_tr['Con'].append("%.3f" % cv_training_rmse(clf, data_all, Con))
 
-    loss = -cross_val_score(clf_log, data_all, Ope, cv=5, scoring='mean_squared_error')
-    loss = sqrt_list(loss)
-    rmse_pred['Ope'] = "%.3f" % np.mean(loss)
-    rmse_base['Ope'] = "%.3f" % rmse_mean(Ope)
+        rmse_pred['Ope'].append("%.3f" % cv_testing_rmse(clf, data_all, Ope))
+        rmse_base['Ope'].append(5.355)
+        rmse_tr['Ope'].append("%.3f" % cv_training_rmse(clf, data_all, Ope))
 
-    print("rmse of data_all in pr_list")
-    for pr in pr_list:
-        print(rmse_pred[pr])
+    # print("rmse of data_all in testing")
+    # for pr in pr_list:
+    #     print(rmse_pred[pr])
+    #
+    # print("")
+    # print("rmse of data_all training")
+    # for pr in pr_list:
+    #     print(rmse_tr[pr])
+    #
+    # print("")
+    # print("rmse of mean of pr")
+    # for pr in pr_list:
+    #     print(rmse_base[pr])
 
-    print("")
-    print("rmse of mean of pr")
-    for pr in pr_list:
-        print(rmse_base[pr])
-    '''
+    #plot
+    #HH, Emo, Ext, Agr, Con, Ope
+    k = np.arange(12)
+
+    plt.figure()
+    plt.plot(k, rmse_pred["HH"], 'r-', label = 'testing')
+    plt.plot(k, rmse_tr["HH"], 'b-', label = 'training')
+    plt.plot(k, rmse_base["HH"], 'g-', label = 'baseline')
+    plt.legend(loc = 'lower right')
+    plt.ylabel("rmse")
+    plt.xlabel("alpha value")
+    plt.title("HH")
+
+    plt.figure()
+    plt.plot(k, rmse_pred["Emo"], 'r-', label = 'testing')
+    plt.plot(k, rmse_tr["Emo"], 'b-', label = 'training')
+    plt.plot(k, rmse_base["Emo"], 'g-', label = 'baseline')
+    plt.legend(loc = 'lower right')
+    plt.ylabel("rmse")
+    plt.xlabel("alpha value")
+    plt.title("Emo")
+
+    plt.figure()
+    plt.plot(k, rmse_pred["Ext"], 'r-', label = 'testing')
+    plt.plot(k, rmse_tr["Ext"], 'b-', label = 'training')
+    plt.plot(k, rmse_base["Ext"], 'g-', label = 'baseline')
+    plt.legend(loc = 'lower right')
+    plt.ylabel("rmse")
+    plt.xlabel("alpha value")
+    plt.title("Ext")
+
+    plt.figure()
+    plt.plot(k, rmse_pred["Agr"], 'r-', label = 'testing')
+    plt.plot(k, rmse_tr["Agr"], 'b-', label = 'training')
+    plt.plot(k, rmse_base["Agr"], 'g-', label = 'baseline')
+    plt.legend(loc = 'lower right')
+    plt.ylabel("rmse")
+    plt.xlabel("alpha value")
+    plt.title("Agr")
+
+    plt.figure()
+    plt.plot(k, rmse_pred["Con"], 'r-', label = 'testing')
+    plt.plot(k, rmse_tr["Con"], 'b-', label = 'training')
+    plt.plot(k, rmse_base["Con"], 'g-', label = 'baseline')
+    plt.legend(loc = 'lower right')
+    plt.ylabel("rmse")
+    plt.xlabel("alpha value")
+    plt.title("Con")
+
+    plt.figure()
+    plt.plot(k, rmse_pred["Ope"], 'r-', label = 'testing')
+    plt.plot(k, rmse_tr["Ope"], 'b-', label = 'training')
+    plt.plot(k, rmse_base["Ope"], 'g-', label = 'baseline')
+    plt.legend(loc = 'lower right')
+    plt.ylabel("rmse")
+    plt.xlabel("alpha value")
+    plt.title("Ope")
+    plt.show()
 
 
 if __name__ == '__main__':
