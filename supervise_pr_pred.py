@@ -119,7 +119,8 @@ def sqrt_list(loss):
 
 def rmse_mean(pr):
     rmse = []
-    split_ind = [0, 103, 206, 309, 412, 513]
+    split_ind = np.linspace(0, len(pr), num=6, dtype=np.int)
+    split_ind = split_ind.tolist()
     for i in range(len(split_ind)-1):
         test = []
         train = []
@@ -142,7 +143,8 @@ def rmse_mean(pr):
 
 def cv_training_rmse(clf, data, label):
     rmse = []
-    split_ind = [0, 103, 206, 309, 412, 513]
+    split_ind = np.linspace(0, len(data), num=6, dtype=np.int)
+    split_ind = split_ind.tolist()
     for i in range(len(split_ind)-1):
         tr_x = []
         tr_y = []
@@ -175,7 +177,8 @@ def cv_training_rmse(clf, data, label):
 
 def cv_testing_rmse(clf, data, label):
     rmse = []
-    split_ind = [0, 103, 206, 309, 412, 513]
+    split_ind = np.linspace(0, len(data), num=6, dtype=np.int)
+    split_ind = split_ind.tolist()
     for i in range(len(split_ind)-1):
         tr_x = []
         tr_y = []
