@@ -120,7 +120,8 @@ def sqrt_list(loss):
 
 def rmse_mean(pr):
     rmse = []
-    split_ind = [0, 103, 206, 309, 412, 513]
+    split_ind = np.linspace(0, len(pr), num=6, dtype=np.int)
+    split_ind = split_ind.tolist()
     for i in range(len(split_ind)-1):
         test = []
         train = []
@@ -143,7 +144,8 @@ def rmse_mean(pr):
 
 def cv_training_rmse(clf, data, label):
     rmse = []
-    split_ind = [0, 103, 206, 309, 412, 513]
+    split_ind = np.linspace(0, len(data), num=6, dtype=np.int)
+    split_ind = split_ind.tolist()
     for i in range(len(split_ind)-1):
         tr_x = []
         tr_y = []
@@ -159,10 +161,6 @@ def cv_training_rmse(clf, data, label):
 
         tr_clf = clf.fit(tr_x, tr_y)
         tr_pred = tr_clf.predict(tr_x)
-        # print(tr_pred)
-        # print("")
-        # print(tr_y)
-        # input()
         for tr_i in range(len(tr_y)):
             tr_y[tr_i] = tr_y[tr_i] - tr_pred[tr_i]
         tr_y = np.asarray(tr_y)
@@ -176,7 +174,8 @@ def cv_training_rmse(clf, data, label):
 
 def cv_testing_rmse(clf, data, label):
     rmse = []
-    split_ind = [0, 103, 206, 309, 412, 513]
+    split_ind = np.linspace(0, len(data), num=6, dtype=np.int)
+    split_ind = split_ind.tolist()
     for i in range(len(split_ind)-1):
         tr_x = []
         tr_y = []
@@ -212,44 +211,110 @@ def main():
     usernum = choose_user()
     data_v4 = load_data_v4(usernum)
     data_v5 = load_data_v5(usernum)
-    kmeans_v4 = []
-    kmeans_v5 = []
-    kmeans_all = []
+    kms_data = []
     data_all = load_data_all(data_v4, data_v5)
+    pr = {'HH':[], 'Emo':[], 'Ext':[], 'Agr':[], 'Con':[], 'Ope':[]}
     pr_list = ['HH', 'Emo', 'Ext', 'Agr', 'Con', 'Ope']
     rmse_pred = {'HH':[], 'Emo':[], 'Ext':[], 'Agr':[], 'Con':[], 'Ope':[]}
     rmse_base = {'HH':[], 'Emo':[], 'Ext':[], 'Agr':[], 'Con':[], 'Ope':[]}
     rmse_tr = {'HH':[], 'Emo':[], 'Ext':[], 'Agr':[], 'Con':[], 'Ope':[]}
+    tmp_rmse_pred = {}
+    tmp_rmse_base = {}
+    tmp_rmse_tr = {}
+
     mse = []
 
     #big6
     print("Loading pr_info")
     HH, Emo, Ext, Agr, Con, Ope = load_pr()
+    for user_num in range(len(HH)):
+        pr['HH'].append(HH[user_num])
+        pr['Emo'].append(Emo[user_num])
+        pr['Ext'].append(Ext[user_num])
+        pr['Agr'].append(Agr[user_num])
+        pr['Con'].append(Con[user_num])
+        pr['Ope'].append(Ope[user_num])
+
+
 
     #main
+    #hyper parameter settings
+    #how many clusters?
+    n_clusters = 5
 
-    #daily_v4 kmeans
-    for km4_i in range(len(data_v4)):
-        kmeans_v4.append(data_v4[km4_i])
-
-    kmeans_v4_model_c3 = KMeans(n_clusters = 3).fit(kmeans_v4)
-    kmeans_v4_model_c4 = KMeans(n_clusters = 4).fit(kmeans_v4)
-    kmeans_v4_model_c5 = KMeans(n_clusters = 5).fit(kmeans_v4)
+    #which dataset?
+    user_data = data_v4
 
 
-    #HH, Emo, Ext, Agr, Con, Ope
-    #c3
-    ### km_c3["0"] -> dict{user_id in pr: data_v4[user_id]}.
-    ### If you want to check detail userid_daily_v4.csv, plz find the user_id in pr then go to user_list to get the user"id"_daily_v4.csv.
-    km4_c3_data_v4 = {"0":[], "1":[], "2":[]}
-    km4_c3_user_list = {"0":[], "1":[], "2":[]}
-    for o_i in range(len(data_v4)):
-        km4_c3_data_v4[str(kmeans_v4_model_c3.labels_[o_i])].append(data_v4[o_i])
-        km4_c3_user_list[str(kmeans_v4_model_c3.labels_[o_i])].append(o_i)
+    # ------------------------------------------------------------------------#
+    #kms model training
+    for km4_i in range(len(user_data)):
+        kms_data.append(user_data[km4_i])
+
+    kms_model = KMeans(n_clusters, random_state=42).fit(kms_data)
+
+    ### If you want to check detail userid_daily_v4.csv, you have to find the user_id in pr then go to user_list to get the user"id"_daily_v4.csv. ###
+    kms_data = {}
+    kms_pr = {}
+    kms_user_list = {}
+
+    for c_num in range(n_clusters):
+        kms_data.update({str(c_num):[]})
+        kms_user_list.update({str(c_num):[]})
+        tmp_rmse_pred.update({str(c_num):{'HH':[], 'Emo':[], 'Ext':[], 'Agr':[], 'Con':[], 'Ope':[]}})
+        tmp_rmse_base.update({str(c_num):{'HH':[], 'Emo':[], 'Ext':[], 'Agr':[], 'Con':[], 'Ope':[]}})
+        tmp_rmse_tr.update({str(c_num):{'HH':[], 'Emo':[], 'Ext':[], 'Agr':[], 'Con':[], 'Ope':[]}})
+
+    for c_num in range(n_clusters):
+        kms_pr.update({str(c_num):{'HH':[], 'Emo':[], 'Ext':[], 'Agr':[], 'Con':[], 'Ope':[]}})
+
+    for o_i in range(len(user_data)):
+        kms_data[str(kms_model.labels_[o_i])].append(user_data[o_i])
+        kms_user_list[str(kms_model.labels_[o_i])].append(o_i)
+        for pr_list_i in pr_list:
+            kms_pr[str(kms_model.labels_[o_i])][pr_list_i].append(pr[pr_list_i][o_i])
+
+    for c_num in range(n_clusters):
+        for alpha_val in range(1, 13, 1):
+            clf = linear_model.Ridge(alpha = alpha_val)
+
+            for pr_list_i in pr_list:
+                tmp_rmse_pred[str(c_num)][pr_list_i].append(cv_testing_rmse(clf, kms_data[str(c_num)], kms_pr[str(c_num)][pr_list_i]))
+                tmp_rmse_base[str(c_num)][pr_list_i].append(rmse_mean(kms_pr[str(c_num)][pr_list_i]))
+                tmp_rmse_tr[str(c_num)][pr_list_i].append(cv_training_rmse(clf, kms_data[str(c_num)], kms_pr[str(c_num)][pr_list_i]))
+
+        for pr_list_i in pr_list:
+            if c_num == 0:
+                rmse_pred[pr_list_i] = tmp_rmse_pred[str(c_num)][pr_list_i]
+                rmse_base[pr_list_i] = tmp_rmse_base[str(c_num)][pr_list_i]
+                rmse_tr[pr_list_i] = tmp_rmse_tr[str(c_num)][pr_list_i]
+            else:
+                for ind_i in range(len(tmp_rmse_pred[str(c_num)][pr_list_i])):
+                    rmse_pred[pr_list_i][ind_i] += tmp_rmse_pred[str(c_num)][pr_list_i][ind_i]
+                    rmse_base[pr_list_i][ind_i] += tmp_rmse_base[str(c_num)][pr_list_i][ind_i]
+                    rmse_tr[pr_list_i][ind_i] += tmp_rmse_tr[str(c_num)][pr_list_i][ind_i]
+
+    for pr_i in pr_list:
+        rmse_pred[pr_i][:] = [float('%.3f' % (float(x) / float(n_clusters))) for x in rmse_pred[pr_i]]
+        rmse_base[pr_i][:] = [float('%.3f' % (float(x) / float(n_clusters))) for x in rmse_base[pr_i]]
+        rmse_tr[pr_i][:] = [float('%.3f' % (float(x) / float(n_clusters))) for x in rmse_tr[pr_i]]
+
+    print("rmse of data_all in testing")
+    for pr in pr_list:
+        print(rmse_pred[pr])
+
+    print("")
+    print("rmse of data_all training")
+    for pr in pr_list:
+        print(rmse_tr[pr])
+
+    print("")
+    print("rmse of data_all baseline")
+    for pr in pr_list:
+        print(rmse_base[pr])
 
 
     #plot
-    '''
     #HH, Emo, Ext, Agr, Con, Ope
     k = np.arange(12)
 
@@ -261,6 +326,7 @@ def main():
     plt.ylabel("rmse")
     plt.xlabel("alpha value")
     plt.title("HH")
+    plt.savefig("../HH.eps", format='eps', dpi=1000)
 
     plt.figure()
     plt.plot(k, rmse_pred["Emo"], 'r-', label = 'testing')
@@ -270,6 +336,7 @@ def main():
     plt.ylabel("rmse")
     plt.xlabel("alpha value")
     plt.title("Emo")
+    plt.savefig("../Emo.eps", format='eps', dpi=1000)
 
     plt.figure()
     plt.plot(k, rmse_pred["Ext"], 'r-', label = 'testing')
@@ -279,6 +346,7 @@ def main():
     plt.ylabel("rmse")
     plt.xlabel("alpha value")
     plt.title("Ext")
+    plt.savefig("../Ext.eps", format='eps', dpi=1000)
 
     plt.figure()
     plt.plot(k, rmse_pred["Agr"], 'r-', label = 'testing')
@@ -288,6 +356,7 @@ def main():
     plt.ylabel("rmse")
     plt.xlabel("alpha value")
     plt.title("Agr")
+    plt.savefig("../Agr.eps", format='eps', dpi=1000)
 
     plt.figure()
     plt.plot(k, rmse_pred["Con"], 'r-', label = 'testing')
@@ -297,6 +366,7 @@ def main():
     plt.ylabel("rmse")
     plt.xlabel("alpha value")
     plt.title("Con")
+    plt.savefig("../Con.eps", format='eps', dpi=1000)
 
     plt.figure()
     plt.plot(k, rmse_pred["Ope"], 'r-', label = 'testing')
@@ -306,8 +376,12 @@ def main():
     plt.ylabel("rmse")
     plt.xlabel("alpha value")
     plt.title("Ope")
+    plt.savefig("../Ope.eps", format='eps', dpi=1000)
+
     plt.show()
-    '''
+
+
+
 
 if __name__ == '__main__':
     main()
