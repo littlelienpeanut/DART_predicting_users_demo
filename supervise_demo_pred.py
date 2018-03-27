@@ -1,9 +1,13 @@
 import pandas as pd
 import itertools
 import csv
-from sklearn.neighbors import KNeighborsClassifier
+from sklearn.linear_model import Ridge
+from sklearn.cluster import KMeans
 import random
 from sklearn.cross_validation import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn import linear_model
+from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import cross_val_predict
 from sklearn.model_selection import cross_val_score
 from sklearn.metrics import confusion_matrix
@@ -12,16 +16,21 @@ from sklearn.metrics import auc
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn import svm
-
+from sklearn.metrics import mean_squared_error
+import matplotlib.pyplot as plt
+from math import sqrt
+from sklearn.learning_curve import learning_curve
+from sklearn.metrics import mean_squared_error
 
 def load_data_v4(usernum):
     daily_v4 = []
-
     for fname in usernum:
         tmp_list = []
         data = pd.read_csv(fname + "_daily_v4.csv")
         for j in range(0, 24, 1):
+            ### type("%.2f" % data['ratio'][j]) is string not float!!! ###
             tmp_list.append(data["ratio"][j])
+
         daily_v4.append(tmp_list)
 
     return daily_v4
@@ -34,10 +43,22 @@ def load_data_v5(usernum):
         tmp_list = []
         data = pd.read_csv(fname + "_daily_v5.csv")
         for cate in cate_list:
-            tmp_list.append(data[cate][0])
+            tmp_list.append(float(data[cate][0]))
+
         daily_v5.append(tmp_list)
 
     return daily_v5
+
+def load_data_all(v4, v5):
+    tmp_v4 = v4
+    tmp_v5 = v5
+    data_all = []
+    for kmm_i in range(len(v4)):
+        tmp_list = []
+        tmp_list = tmp_v4[kmm_i] + tmp_v5[kmm_i]
+        data_all.append(tmp_list)
+
+    return data_all
 
 def load_cate_list():
     list = []
@@ -50,96 +71,21 @@ def load_user_list():
     user_list = pd.read_csv("user_list.csv")
     return user_list
 
-def load_user_demo():
-    user_demo = {}
-    data = pd.read_csv("user_demo.csv")
-    for i in range(len(data)):
-        tdict = {}
-        tdict.update({"age": data["age"][i]})
-        tdict.update({"gender": data["gender"][i]})
-        tdict.update({"relationship": data["relationship"][i]})
-        tdict.update({"income": data["income"][i]})
-        tdict.update({"edu": data["edu"][i]})
-        tdict.update({"location": data["location"][i]})
-        tdict.update({"occupation": data["occupation"][i]})
-        tdict.update({"industry": data["industry"][i]})
-        user_demo.update({data["id"][i]:tdict})
-    return user_demo
-
-def load_user_label():
-    user_label_age = []
-    user_label_gender = []
-    user_label_relationship = []
-    user_label_income = []
-    user_label_edu = []
-    user_label_location = []
-    user_label_occupation = []
-    user_label_industry = []
-    user_id_list = load_user_list()
-    user_demo = load_user_demo()
-    for i in range(len(user_id_list)):
-        try:
-            user_label_age.append(user_demo[user_id_list["id"][i]]["age"])
-            user_label_gender.append(user_demo[user_id_list["id"][i]]["gender"])
-            user_label_relationship.append(user_demo[user_id_list["id"][i]]["relationship"])
-            user_label_income.append(user_demo[user_id_list["id"][i]]["income"])
-            user_label_edu.append(user_demo[user_id_list["id"][i]]["edu"])
-            user_label_location.append(user_demo[user_id_list["id"][i]]["location"])
-            user_label_occupation.append(user_demo[user_id_list["id"][i]]["occupation"])
-            user_label_industry.append(user_demo[user_id_list["id"][i]]["industry"])
-
-        except:
-            pass
-
-    return user_label_age, user_label_gender, user_label_relationship, user_label_income, user_label_edu, user_label_location, user_label_occupation, user_label_industry
-
-def choose_user():
+def choose_user(user_demo_id):
+    #return the user_num:1~672 who has demographic data as "userN" and the user index in user_demo
     usernum = []
-    user_demo = load_user_demo()
-    user_id_list = load_user_list()
+    user_demo = load_user_demo() #509
+    user_id_list = load_user_list() #672
     for i in range(len(user_id_list)):
         try:
-            if user_demo[user_id_list["id"][i]]["age"]:
+            #if user has user_demo
+            if user_demo_id[user_id_list["id"][i]] == 0:
                 usernum.append("user" + str(i+1))
 
         except:
             pass
 
     return usernum
-
-def get_class_num(te_y):
-    tmp_list = []
-    for i in te_y:
-        if i in tmp_list:
-            pass
-        else:
-            tmp_list.append(i)
-
-    return tmp_list
-
-def recall(cnf):
-    recall = []
-    for i in range(len(cnf[0])):
-        tmp_recall = float(cnf[i][i]) / float(sum(cnf[i]))
-        recall.append(tmp_recall)
-
-    return recall
-
-def precision(cnf, oc):
-    precision = []
-    for i in range(len(cnf[0])):
-        tmp = 0
-        pre = 0
-        for j in range(len(cnf[0])):
-            tmp += cnf[j][i]
-        if tmp == 0:
-            tmp += 1
-
-        pre = float(cnf[i][i]) / float(tmp)
-        precision.append(pre)
-    precision.append(oc)
-
-    return precision
 
 def plot_confusion_matrix(cm, classes,
                           normalize=False,
@@ -208,212 +154,87 @@ def plot_confusion_matrix(cm, classes,
     plt.xlabel('Predicted label')
 
 
+def load_user_demo():
+    user_demo = {'id':[], 'age':[], 'gender':[], 'relationship':[], 'income':[], 'edu':[]}
+    data = pd.read_csv("user_demo.csv")
+    user_demo_id = {}
+    demo_list = ['id', 'age', 'gender', 'relationship', 'income', 'edu']
+
+    for i in range(len(data)):
+        for demo_i in demo_list:
+            user_demo[demo_i].append(data[demo_i][i])
+
+        user_demo_id.update({data["id"][i]:0})
+
+    return user_demo, user_demo_id
+
+def recall(cnf):
+    recall = []
+    for i in range(len(cnf[0])):
+        tmp_recall = float(cnf[i][i]) / float(sum(cnf[i]))
+        recall.append(tmp_recall)
+
+    return recall
+
+def precision(cnf, oc):
+    precision = []
+    for i in range(len(cnf[0])):
+        tmp = 0
+        pre = 0
+        for j in range(len(cnf[0])):
+            tmp += cnf[j][i]
+        if tmp == 0:
+            tmp += 1
+
+        pre = float(cnf[i][i]) / float(tmp)
+        precision.append(pre)
+    precision.append(oc)
+
+    return precision
+
+
 def main():
     #variable
-    data_v4 = []
-    data_v5 = []
-    user_label = []
-    usernum = []
-    user_label_age = []
-    user_label_gender = []
-    user_label_relationship = []
-    user_label_income = []
-    user_label_edu = []
-    user_label_location = []
-    user_label_occupation = []
-    user_label_industry = []
-    label_name_list = ["age", "gender", "relationship", "income", "edu"]
-    #data[0].id == user_id_list["id"][0]
-    user_id_list = load_user_list()
-    user_demo = load_user_demo()
-    #index is user_i-1
-    usernum = choose_user()
+    ### user_demo[id]['demographic'] ###
+    print("Loading users' info")
+    user_demo = []
+    user_demo_id = {}
+    user_demo, user_demo_id = load_user_demo()
+    usernum = choose_user(user_demo_id)
     data_v4 = load_data_v4(usernum)
     data_v5 = load_data_v5(usernum)
-    user_label_age, user_label_gender, user_label_relationship, user_label_income, user_label_edu, user_label_location, user_label_occupation, user_label_industry = load_user_label()
+    data_all = load_data_all(data_v4, data_v5)
+    demo_list = ['age', 'gender', 'relationship', 'income', 'edu']
 
+    #class name
+    class_name = {'age':["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"], 'gender':["1", "2", "3"], 'relationship':["1", "2", "3", "4", "5"], 'income':["1", "2", "3", "4", "5", "6", "7", "8"], 'edu':["1", "2", "3", "4", "5", "7"]}
 
 
     #main
+    #which dataset?
+    user_data = data_all
 
-    #find the best k in v4, v5 with every demographic
-    #in v4 age: k=16, gender: k=15, relationship: k=1or8, income: k=4, edu: k=4
-    v4_k = [16, 15, 1, 4, 4]
-    #in v5 age: k=9, gender: k=1or3, relationship: k=5, income: k=7, edu: k=12
-    v5_k = [9, 1, 5, 7, 12]
-    """
-    k_score = []
-    k_range = range(1,20)
-    for k in k_range:
-        knn_v4_age = KNeighborsClassifier(n_neighbors = k)
-        #knn_v4_age_scores = cross_val_score(knn_v4_age, data_v4, user_label_age, cv=5, scoring = "accuracy")
-        tmp_score = []
-        for iter in range(5):
-            tr_x, te_x, tr_y, te_y = train_test_split(data_v5, user_label_edu, test_size = 0.2, random_state=42)
-            knn_v4_age.fit(tr_x, tr_y)
-            tmp_score.append(knn_v4_age.score(te_x, te_y))
+    # ------------------------------------------------------------------------#
+    demo_pred_score = {'age':[], 'gender':[], 'relationship':[], 'income':[], 'edu':[]}
 
-        k_score.append(sum(tmp_score)/5.0)
+    for k in range(2, 20, 1):
+        ### classifier choosing
+        clf = KNeighborsClassifier(n_neighbors = k)
+        print('n_neighbors: ' + str(k))
+        for demo_i in demo_list:
+            '''
+            demo_pred[str(c_num)][demo_i].append(cross_val_predict(clf, kms_data[str(c_num)], kms_demo[str(c_num)][demo_i], cv=5))
+            cnf_matrix = confusion_matrix(kms_demo[str(c_num)][demo_i], demo_pred[str(c_num)][demo_i][k-2])
+            plt.figure()
+            plot_confusion_matrix(cnf_matrix, classes=class_name[demo_i], normalize=True, title=demo_i + ' in k = ' + str(k))
+            plt.show()
+            '''
+            #f1-micro and f1-macro
+            demo_pred_score[demo_i].append(np.mean(cross_val_score(clf, user_data, user_demo[demo_i], cv=5, scoring='f1_micro')))
 
-    for i in range(len(k_score)):
-        print("k = " + str(i+1) + " accuracy = " + str(k_score[i]))
-    """
-
-    #knn
-    #age_v4
-    age_class_name = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"]
-    knn_v4_age = KNeighborsClassifier(n_neighbors = 7)
-    knn_v4_age_pred = cross_val_predict(knn_v4_age, data_v4, user_label_age, cv=5)
-    cnf_matrix = confusion_matrix(user_label_age, knn_v4_age_pred)
-    #plt.figure()
-    #plot_confusion_matrix(cnf_matrix, classes=age_class_name, normalize=True, title='knn_v4_age with k = 7')
-
-    #age_v5
-    knn_v5_age = KNeighborsClassifier(n_neighbors = 9)
-    knn_v5_age_pred = cross_val_predict(knn_v5_age, data_v5, user_label_age, cv=5)
-    cnf_matrix = confusion_matrix(user_label_age, knn_v5_age_pred)
-    #plt.figure()
-    #plot_confusion_matrix(cnf_matrix, classes=age_class_name, normalize=True, title='knn_v5_age with k = 9')
-
-    #gender_v4
-    gender_class_name = ["1", "2", "3"]
-    knn_v4_gender = KNeighborsClassifier(n_neighbors = 15)
-    knn_v4_gender_pred = cross_val_predict(knn_v4_gender, data_v4, user_label_gender, cv=5)
-    cnf_matrix = confusion_matrix(user_label_gender, knn_v4_gender_pred)
-    #plt.figure()
-    #plot_confusion_matrix(cnf_matrix, classes=gender_class_name, normalize=True, title='knn_v4_gender with k = 15')
-
-    #gender_v5
-    knn_v5_gender = KNeighborsClassifier(n_neighbors = 1)
-    knn_v5_gender_pred = cross_val_predict(knn_v5_gender, data_v5, user_label_gender, cv=5)
-    cnf_matrix = confusion_matrix(user_label_gender, knn_v5_gender_pred)
-    #plt.figure()
-    #plot_confusion_matrix(cnf_matrix, classes=gender_class_name, normalize=True, title='knn_v5_gender with k = 1')
-
-    #gender_v4
-    relationship_class_name = ["1", "2", "3", "4", "5"]
-    knn_v4_relationship = KNeighborsClassifier(n_neighbors = 1)
-    knn_v4_relationship_pred = cross_val_predict(knn_v4_relationship, data_v4, user_label_relationship, cv=5)
-    cnf_matrix = confusion_matrix(user_label_relationship, knn_v4_relationship_pred)
-    #plt.figure()
-    #plot_confusion_matrix(cnf_matrix, classes=relationship_class_name, normalize=True, title='knn_v4_relationship with k = 1')
-
-    #gender_v5
-    knn_v5_relationship = KNeighborsClassifier(n_neighbors = 5)
-    knn_v5_relationship_pred = cross_val_predict(knn_v5_relationship, data_v5, user_label_relationship, cv=5)
-    cnf_matrix = confusion_matrix(user_label_relationship, knn_v5_relationship_pred)
-    #plt.figure()
-    #plot_confusion_matrix(cnf_matrix, classes=relationship_class_name, normalize=True, title='knn_v5_relationship with k = 1')
-
-    #income_v4
-    income_class_name = ["1", "2", "3", "4", "5", "6", "7", "8"]
-    knn_v4_income = KNeighborsClassifier(n_neighbors = 4)
-    knn_v4_income_pred = cross_val_predict(knn_v4_income, data_v4, user_label_income, cv=5)
-    cnf_matrix = confusion_matrix(user_label_income, knn_v4_income_pred)
-    #plt.figure()
-    #plot_confusion_matrix(cnf_matrix, classes=income_class_name, normalize=True, title='knn_v4_income with k = 4')
-
-    #income_v5
-    knn_v5_income = KNeighborsClassifier(n_neighbors = 7)
-    knn_v5_income_pred = cross_val_predict(knn_v5_income, data_v5, user_label_income, cv=5)
-    cnf_matrix = confusion_matrix(user_label_income, knn_v5_income_pred)
-    #plt.figure()
-    #plot_confusion_matrix(cnf_matrix, classes=income_class_name, normalize=True, title='knn_v5_income with k = 7')
-
-    #edu_v4
-    edu_class_name = ["1", "2", "3", "4", "5", "7"]
-    knn_v4_edu = KNeighborsClassifier(n_neighbors = 4)
-    knn_v4_edu_pred = cross_val_predict(knn_v4_edu, data_v4, user_label_edu, cv=5)
-    cnf_matrix = confusion_matrix(user_label_edu, knn_v4_edu_pred)
-    #plt.figure()
-    #plot_confusion_matrix(cnf_matrix, classes=edu_class_name, normalize=True, title='knn_v4_user_label_edu with k = 4')
-
-    #income_v5
-    knn_v5_edu = KNeighborsClassifier(n_neighbors = 12)
-    knn_v5_edu_pred = cross_val_predict(knn_v5_edu, data_v5, user_label_edu, cv=5)
-    cnf_matrix = confusion_matrix(user_label_edu, knn_v5_edu_pred)
-    print(user_label_edu)
-    print('')
-    print(knn_v5_edu_pred)
-    input()
-    #plt.figure()
-    #plot_confusion_matrix(cnf_matrix, classes=edu_class_name, normalize=True, title='knn_v5_user_label_edu with k = 12')
-
-
-    #svm
-    #age_v4
-    svm_v4_age = svm.SVC()
-    svm_v4_age_pred = cross_val_predict(svm_v4_age, data_v4, user_label_age, cv=5)
-    cnf_matrix = confusion_matrix(user_label_age, svm_v4_age_pred)
-    #plt.figure()
-    #plot_confusion_matrix(cnf_matrix, classes=age_class_name, normalize=True, title='SVM_v4_age')
-
-    #age_v5
-    svm_v5_age = svm.SVC()
-    svm_v5_age_pred = cross_val_predict(svm_v5_age, data_v5, user_label_age, cv=5)
-    cnf_matrix = confusion_matrix(user_label_age, svm_v5_age_pred)
-    #plt.figure()
-    #plot_confusion_matrix(cnf_matrix, classes=age_class_name, normalize=True, title='SVM_v5_age')
-
-
-    #gender_v4
-    svm_v4_gender = svm.SVC()
-    svm_v4_gender_pred = cross_val_predict(svm_v4_gender, data_v4, user_label_gender, cv=5)
-    cnf_matrix = confusion_matrix(user_label_gender, svm_v4_gender_pred)
-    plt.figure()
-    plot_confusion_matrix(cnf_matrix, classes=gender_class_name, normalize=True, title='SVM_v4_gender')
-
-
-    #gender_v5
-    svm_v5_gender = svm.SVC()
-    svm_v5_gender_pred = cross_val_predict(svm_v5_gender, data_v5, user_label_gender, cv=5)
-    cnf_matrix = confusion_matrix(user_label_gender, svm_v5_gender_pred)
-    #plt.figure()
-    #plot_confusion_matrix(cnf_matrix, classes=gender_class_name, normalize=True, title='SVM_v5_gender')
-
-    #relationship_v4
-    svm_v4_relationship = svm.SVC()
-    svm_v4_relationship_pred = cross_val_predict(svm_v4_relationship, data_v4, user_label_relationship, cv=5)
-    cnf_matrix = confusion_matrix(user_label_relationship, svm_v4_relationship_pred)
-    #plt.figure()
-    #plot_confusion_matrix(cnf_matrix, classes=relationship_class_name, normalize=True, title='SVM_v4_relationship')
-
-    #relationship_v5
-    svm_v5_relationship = svm.SVC()
-    svm_v5_relationship_pred = cross_val_predict(svm_v5_relationship, data_v5, user_label_relationship, cv=5)
-    cnf_matrix = confusion_matrix(user_label_relationship, svm_v5_relationship_pred)
-    #plt.figure()
-    #plot_confusion_matrix(cnf_matrix, classes=relationship_class_name, normalize=True, title='SVM_v5_relationship')
-
-    #income_v4
-    svm_v4_income = svm.SVC()
-    svm_v4_income_pred = cross_val_predict(svm_v4_income, data_v4, user_label_income, cv=5)
-    cnf_matrix = confusion_matrix(user_label_income, svm_v4_income_pred)
-    #plt.figure()
-    #plot_confusion_matrix(cnf_matrix, classes=income_class_name, normalize=True, title='SVM_v4_income')
-
-    #income_v5
-    svm_v5_income = svm.SVC()
-    svm_v5_income_pred = cross_val_predict(svm_v5_income, data_v5, user_label_income, cv=5)
-    cnf_matrix = confusion_matrix(user_label_income, svm_v5_income_pred)
-    #plt.figure()
-    #plot_confusion_matrix(cnf_matrix, classes=income_class_name, normalize=True, title='SVM_v5_income')
-
-    #edu_v4
-    svm_v4_edu = svm.SVC()
-    svm_v4_edu_pred = cross_val_predict(svm_v4_edu, data_v4, user_label_edu, cv=5)
-    cnf_matrix = confusion_matrix(user_label_edu, svm_v4_edu_pred)
-    #plt.figure()
-    #plot_confusion_matrix(cnf_matrix, classes=edu_class_name, normalize=True, title='SVM_v4_edu')
-
-    #edu_v5
-    svm_v5_edu = svm.SVC()
-    svm_v5_edu_pred = cross_val_predict(svm_v5_edu, data_v5, user_label_edu, cv=5)
-    cnf_matrix = confusion_matrix(user_label_edu, svm_v5_edu_pred)
-    #plt.figure()
-    #plot_confusion_matrix(cnf_matrix, classes=edu_class_name, normalize=True, title='SVM_v5_edu')
-
-    plt.show()
+    #print the best f1-micro with k_value
+    for demo_i in demo_list:
+        print(demo_i + ' /   Best testing score: ' + str('%.3f' % max(demo_pred_score[demo_i])) + ' /  k : ' + str(demo_pred_score[demo_i].index(max(demo_pred_score[demo_i]))+2))
 
 
 if __name__ == '__main__':
