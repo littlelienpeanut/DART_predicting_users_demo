@@ -117,7 +117,7 @@ def main():
     print("")
     print("")
     '''
-    
+
     with open("cluster_0_demo.csv", "w") as fout:
         wr = csv.writer(fout)
         title = ["age", "gender", "relationship", "income", "edu", "location", "occupation", "industry"]

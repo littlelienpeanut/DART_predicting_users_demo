@@ -332,6 +332,10 @@ def main():
     knn_v5_edu = KNeighborsClassifier(n_neighbors = 12)
     knn_v5_edu_pred = cross_val_predict(knn_v5_edu, data_v5, user_label_edu, cv=5)
     cnf_matrix = confusion_matrix(user_label_edu, knn_v5_edu_pred)
+    print(user_label_edu)
+    print('')
+    print(knn_v5_edu_pred)
+    input()
     #plt.figure()
     #plot_confusion_matrix(cnf_matrix, classes=edu_class_name, normalize=True, title='knn_v5_user_label_edu with k = 12')
 
@@ -348,16 +352,16 @@ def main():
     svm_v5_age = svm.SVC()
     svm_v5_age_pred = cross_val_predict(svm_v5_age, data_v5, user_label_age, cv=5)
     cnf_matrix = confusion_matrix(user_label_age, svm_v5_age_pred)
-    plt.figure()
-    plot_confusion_matrix(cnf_matrix, classes=age_class_name, normalize=True, title='SVM_v5_age')
+    #plt.figure()
+    #plot_confusion_matrix(cnf_matrix, classes=age_class_name, normalize=True, title='SVM_v5_age')
 
 
     #gender_v4
     svm_v4_gender = svm.SVC()
     svm_v4_gender_pred = cross_val_predict(svm_v4_gender, data_v4, user_label_gender, cv=5)
     cnf_matrix = confusion_matrix(user_label_gender, svm_v4_gender_pred)
-    #plt.figure()
-    #plot_confusion_matrix(cnf_matrix, classes=gender_class_name, normalize=True, title='SVM_v4_gender')
+    plt.figure()
+    plot_confusion_matrix(cnf_matrix, classes=gender_class_name, normalize=True, title='SVM_v4_gender')
 
 
     #gender_v5

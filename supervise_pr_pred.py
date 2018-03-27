@@ -334,9 +334,9 @@ def main():
     '''
 
     #HH, Emo, Ext, Agr, Con, Ope
-    for alpha_val in range(1, 13, 1):
-        print('epoch = ' + str(alpha_val))
-        clf = Ridge(alpha = alpha_val)
+    for alpha_val in range(1, 130, 1):
+        print('alpha_val = ' + str(alpha_val*0.1))
+        clf = Ridge(alpha = alpha_val*0.1)
         rmse_pred['HH'].append("%.3f" % cv_testing_rmse(clf, data_all, HH))
         rmse_base['HH'].append(5.799)
         rmse_tr['HH'].append("%.3f" % cv_training_rmse(clf, data_all, HH))
@@ -377,7 +377,7 @@ def main():
 
     #plot
     #HH, Emo, Ext, Agr, Con, Ope
-    k = np.arange(12)
+    k = np.arange(129)
 
     plt.figure()
     plt.plot(k, rmse_pred["HH"], 'r-', label = 'testing')
@@ -387,6 +387,7 @@ def main():
     plt.ylabel("rmse")
     plt.xlabel("alpha value")
     plt.title("HH")
+    plt.savefig("../HH.eps", format='eps', dpi=1000)
 
     plt.figure()
     plt.plot(k, rmse_pred["Emo"], 'r-', label = 'testing')
@@ -396,6 +397,7 @@ def main():
     plt.ylabel("rmse")
     plt.xlabel("alpha value")
     plt.title("Emo")
+    plt.savefig("../Emo.eps", format='eps', dpi=1000)
 
     plt.figure()
     plt.plot(k, rmse_pred["Ext"], 'r-', label = 'testing')
@@ -405,6 +407,7 @@ def main():
     plt.ylabel("rmse")
     plt.xlabel("alpha value")
     plt.title("Ext")
+    plt.savefig("../Ext.eps", format='eps', dpi=1000)
 
     plt.figure()
     plt.plot(k, rmse_pred["Agr"], 'r-', label = 'testing')
@@ -414,6 +417,7 @@ def main():
     plt.ylabel("rmse")
     plt.xlabel("alpha value")
     plt.title("Agr")
+    plt.savefig("../Agr.eps", format='eps', dpi=1000)
 
     plt.figure()
     plt.plot(k, rmse_pred["Con"], 'r-', label = 'testing')
@@ -423,6 +427,7 @@ def main():
     plt.ylabel("rmse")
     plt.xlabel("alpha value")
     plt.title("Con")
+    plt.savefig("../Con.eps", format='eps', dpi=1000)
 
     plt.figure()
     plt.plot(k, rmse_pred["Ope"], 'r-', label = 'testing')
@@ -432,6 +437,8 @@ def main():
     plt.ylabel("rmse")
     plt.xlabel("alpha value")
     plt.title("Ope")
+    plt.savefig("../Ope.eps", format='eps', dpi=1000)
+
     plt.show()
 
 
