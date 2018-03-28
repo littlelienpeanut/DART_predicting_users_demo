@@ -217,9 +217,9 @@ def main():
     # ------------------------------------------------------------------------#
     demo_pred_score = {'age':[], 'gender':[], 'relationship':[], 'income':[], 'edu':[]}
 
-    for k in range(2, 20, 1):
+    for k in range(1, 100, 1):
         ### classifier choosing
-        clf = KNeighborsClassifier(n_neighbors = k)
+        clf = svm.SVC(C = k*0.1, class_weight ='balanced')
         print('n_neighbors: ' + str(k))
         for demo_i in demo_list:
             '''

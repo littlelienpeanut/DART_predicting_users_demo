@@ -222,10 +222,10 @@ def main():
     #main
     #hyper parameter settings
     #how many clusters?
-    n_clusters = 2
+    n_clusters = 5
 
     #which dataset?
-    user_data = data_v4
+    user_data = data_v5
 
 
     # ------------------------------------------------------------------------#
@@ -239,6 +239,7 @@ def main():
     kms_demo = {}
     kms_user_list = {}
     demo_pred = {}
+    demo_pred_res = {}
     demo_pred_score = {'age':[], 'gender':[], 'relationship':[], 'income':[], 'edu':[]}
 
     for c_num in range(n_clusters):
@@ -246,7 +247,7 @@ def main():
         kms_user_list.update({str(c_num):[]})
         kms_demo.update({str(c_num):{'age':[], 'gender':[], 'relationship':[], 'income':[], 'edu':[]}})
         demo_pred.update({str(c_num):{'age':[], 'gender':[], 'relationship':[], 'income':[], 'edu':[]}})
-
+        demo_pred_res.update({str(c_num):{'age':[], 'gender':[], 'relationship':[], 'income':[], 'edu':[]}})
 
     for o_i in range(len(user_data)):
         kms_data[str(kms_model.labels_[o_i])].append(user_data[o_i]) #append user_daily
@@ -255,10 +256,10 @@ def main():
             kms_demo[str(kms_model.labels_[o_i])][demo_i].append(user_demo[o_i][demo_i])
 
     for c_num in range(n_clusters):
-        for k in range(2, 20, 1):
+        for k in range(1, 100, 1):
             ### classifier choosing
-            clf = KNeighborsClassifier(n_neighbors = k)
-            print("cluster: " + str(c_num) + ' n_neighbors: ' + str(k))
+            clf = svm.SVC(C = k*0.01, class_weight ='balanced') #svm, LogisticRegression need to add parameter class_weight ='balanced'
+            #print("cluster: " + str(c_num) + ' n_neighbors: ' + str(k))
             for demo_i in demo_list:
                 '''
                 demo_pred[str(c_num)][demo_i].append(cross_val_predict(clf, kms_data[str(c_num)], kms_demo[str(c_num)][demo_i], cv=5))
@@ -269,6 +270,9 @@ def main():
                 '''
                 #f1-micro and f1-macro
                 demo_pred[str(c_num)][demo_i].append(np.mean(cross_val_score(clf, kms_data[str(c_num)], kms_demo[str(c_num)][demo_i], cv=5, scoring='f1_micro')))
+                demo_pred_res[str(c_num)][demo_i].append(cross_val_predict(clf, kms_data[str(c_num)], kms_demo[str(c_num)][demo_i], cv=5))
+                # print(demo_pred_res[str(c_num)][demo_i])
+                # input()
 
         for demo_i in demo_list:
             if c_num == 0:
