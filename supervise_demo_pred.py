@@ -10,6 +10,7 @@ from sklearn import linear_model
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import cross_val_predict
 from sklearn.model_selection import cross_val_score
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import roc_curve
 from sklearn.metrics import auc
@@ -217,10 +218,11 @@ def main():
     # ------------------------------------------------------------------------#
     demo_pred_score = {'age':[], 'gender':[], 'relationship':[], 'income':[], 'edu':[]}
 
-    for k in range(1, 100, 1):
+    for k in range(1, 10, 1):
         ### classifier choosing
-        clf = svm.SVC(C = k*0.1, class_weight ='balanced')
-        print('n_neighbors: ' + str(k))
+        clf = RandomForestClassifier(max_depth=k, random_state=2018)
+        #clf = svm.SVC(C = k*0.1, class_weight ='balanced')
+        print('max_depth: ' + str(k))
         for demo_i in demo_list:
             '''
             demo_pred[str(c_num)][demo_i].append(cross_val_predict(clf, kms_data[str(c_num)], kms_demo[str(c_num)][demo_i], cv=5))
@@ -232,9 +234,11 @@ def main():
             #f1-micro and f1-macro
             demo_pred_score[demo_i].append(np.mean(cross_val_score(clf, user_data, user_demo[demo_i], cv=5, scoring='f1_micro')))
 
+
     #print the best f1-micro with k_value
     for demo_i in demo_list:
         print(demo_i + ' /   Best testing score: ' + str('%.3f' % max(demo_pred_score[demo_i])) + ' /  k : ' + str(demo_pred_score[demo_i].index(max(demo_pred_score[demo_i]))+2))
+    print(demo_pred_score)
 
 
 if __name__ == '__main__':
