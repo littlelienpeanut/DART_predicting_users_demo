@@ -205,7 +205,7 @@ def main():
     data_v4 = load_data_v4(usernum)
     data_v5 = load_data_v5(usernum)
     data_all = load_data_all(data_v4, data_v5)
-    demo_list = ['age', 'gender', 'relationship', 'income', 'edu']
+    demo_list = ['age', 'gender', 'relationship']
 
     #class name
     class_name = {'age':["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"], 'gender':["1", "2", "3"], 'relationship':["1", "2", "3", "4", "5"], 'income':["1", "2", "3", "4", "5", "6", "7", "8"], 'edu':["1", "2", "3", "4", "5", "7"]}
@@ -213,15 +213,15 @@ def main():
 
     #main
     #which dataset?
-    user_data = data_all
+    user_data = data_v5
 
     # ------------------------------------------------------------------------#
     demo_pred_score = {'age':[], 'gender':[], 'relationship':[], 'income':[], 'edu':[]}
 
-    for k in range(1, 10, 1):
+    for k in range(1, 21, 1):
         ### classifier choosing
-        clf = RandomForestClassifier(max_depth=k, random_state=2018)
-        #clf = svm.SVC(C = k*0.1, class_weight ='balanced')
+        #clf = RandomForestClassifier(max_depth=k, random_state=2018)
+        clf = KNeighborsClassifier(n_neighbors=k)
         print('max_depth: ' + str(k))
         for demo_i in demo_list:
             '''
@@ -236,9 +236,34 @@ def main():
 
 
     #print the best f1-micro with k_value
+    print('data_v5')
     for demo_i in demo_list:
         print(demo_i + ' /   Best testing score: ' + str('%.3f' % max(demo_pred_score[demo_i])) + ' /  k : ' + str(demo_pred_score[demo_i].index(max(demo_pred_score[demo_i]))+2))
-    print(demo_pred_score)
+
+    '''
+    clf: knn
+    the best score:
+    dataset: data_v5
+    age /   Best testing score: 0.427 /  k : 18
+    gender /   Best testing score: 0.595 /  k : 19
+    relationship /   Best testing score: 0.479 /  k : 5
+    '''
+
+    #plt
+    k = np.arange(20)
+    x_stick = list(range(1, 21, 1))
+    plt.figure(figsize=(8, 5))
+    plt.tight_layout()
+    plt.plot(k, demo_pred_score['age'], 'r-', label = 'age')
+    plt.plot(k, demo_pred_score['gender'], 'b-', label = 'gender')
+    plt.plot(k, demo_pred_score['relationship'], 'g-', label = 'relationship')
+    plt.xticks(k, x_stick)
+    plt.legend(loc = 'lower right')
+    plt.ylabel("microF1 score")
+    plt.xlabel("number of k")
+    plt.savefig("supervise_demo_pred.eps", format='eps', dpi=1000)
+    #plt.savefig("supervise_demo_pred.png", format='eps', dpi=1000)
+    plt.show()
 
 
 if __name__ == '__main__':
