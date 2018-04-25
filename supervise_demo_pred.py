@@ -91,7 +91,7 @@ def choose_user(user_demo_id):
 def plot_confusion_matrix(cm, classes,
                           normalize=False,
                           title='Confusion matrix',
-                          cmap=plt.cm.Blues):
+                          cmap=plt.cm.Blues, color_bar=None):
     #compute overall accuracy
     oc = 0
     total = 0
@@ -121,11 +121,12 @@ def plot_confusion_matrix(cm, classes,
 
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
     plt.title(title)
-    plt.colorbar()
+    if color_bar == True:
+        plt.colorbar()
     tick_marks = np.arange(len(classes)+1)
     #add recall tick
     classes.append("recall")
-    plt.xticks(tick_marks, classes, rotation=45)
+    plt.xticks(tick_marks, classes)
     #delete recall tick
     classes.pop(len(classes)-1)
     #add precision tick
@@ -150,9 +151,8 @@ def plot_confusion_matrix(cm, classes,
         else:
             pass
 
-    plt.tight_layout()
-    plt.ylabel('True label')
-    plt.xlabel('Predicted label')
+    plt.ylabel('True label', fontsize=12)
+    plt.xlabel('Predicted label', fontsize=12)
 
 
 def load_user_demo():
@@ -208,7 +208,7 @@ def main():
     demo_list = ['age', 'gender', 'relationship']
 
     #class name
-    class_name = {'age':["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"], 'gender':["1", "2", "3"], 'relationship':["1", "2", "3", "4", "5"], 'income':["1", "2", "3", "4", "5", "6", "7", "8"], 'edu':["1", "2", "3", "4", "5", "7"]}
+    class_name = {'age':["1", "2", "3", "4", "5", "6", "7"], 'gender':["1", "2", "3"], 'relationship':["1", "2", "3", "4", "5"], 'income':["1", "2", "3", "4", "5", "6", "7", "8"], 'edu':["1", "2", "3", "4", "5", "7"]}
 
 
     #main
@@ -222,15 +222,9 @@ def main():
         ### classifier choosing
         #clf = RandomForestClassifier(max_depth=k, random_state=2018)
         clf = KNeighborsClassifier(n_neighbors=k)
+        #clf = LogisticRegression(C = k * 0.01)
         print('max_depth: ' + str(k))
         for demo_i in demo_list:
-            '''
-            demo_pred[str(c_num)][demo_i].append(cross_val_predict(clf, kms_data[str(c_num)], kms_demo[str(c_num)][demo_i], cv=5))
-            cnf_matrix = confusion_matrix(kms_demo[str(c_num)][demo_i], demo_pred[str(c_num)][demo_i][k-2])
-            plt.figure()
-            plot_confusion_matrix(cnf_matrix, classes=class_name[demo_i], normalize=True, title=demo_i + ' in k = ' + str(k))
-            plt.show()
-            '''
             #f1-micro and f1-macro
             demo_pred_score[demo_i].append(np.mean(cross_val_score(clf, user_data, user_demo[demo_i], cv=5, scoring='f1_micro')))
 
@@ -248,8 +242,29 @@ def main():
     gender /   Best testing score: 0.595 /  k : 19
     relationship /   Best testing score: 0.479 /  k : 5
     '''
+    '''
+    #plot confusion matrix at best k of microF1
+    best_k = [18, 19, 5]
+    for k_i in range(len(best_k)):
+        demo_pred = []
+        clf = KNeighborsClassifier(n_neighbors=best_k[k_i])
 
-    #plt
+        demo_pred = cross_val_predict(clf, user_data, user_demo[demo_list[k_i]], cv=5)
+        cnf_matrix = confusion_matrix(user_demo[demo_list[k_i]], demo_pred)
+        plt.figure()
+        plt.tight_layout(pad=0.4, w_pad=1.0, h_pad=1.0)
+        if k_i == 2:
+            plot_confusion_matrix(cnf_matrix, classes=class_name[demo_list[k_i]], normalize=True, title=demo_list[k_i] + ' in k = ' + str(best_k[k_i]), color_bar=True)
+
+        else:
+            plot_confusion_matrix(cnf_matrix, classes=class_name[demo_list[k_i]], normalize=True, title=demo_list[k_i] + ' in k = ' + str(best_k[k_i]))
+        plt.savefig(demo_list[k_i]+'.eps', format='eps', dpi=1000)
+        #plt.show()
+    '''
+
+
+    '''
+    #plt microF1
     k = np.arange(20)
     x_stick = list(range(1, 21, 1))
     plt.figure(figsize=(8, 5))
@@ -264,6 +279,7 @@ def main():
     plt.savefig("supervise_demo_pred.eps", format='eps', dpi=1000)
     #plt.savefig("supervise_demo_pred.png", format='eps', dpi=1000)
     plt.show()
+    '''
 
 
 if __name__ == '__main__':
