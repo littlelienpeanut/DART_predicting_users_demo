@@ -207,7 +207,7 @@ def main():
 
     # ------------------------------------------------------------------------#
     demo_pred_score = {'age':[], 'gender':[], 'relationship':[], 'income':[], 'edu':[]}
-
+    '''
     for k in range(1, 10001, 1):
         ### classifier choosing
         clf = svm.SVC(random_state=2018, C= k * 0.001)
@@ -221,20 +221,20 @@ def main():
     print('data_all')
     for demo_i in demo_list:
         print(demo_i + ' /   Best testing score: ' + str('%.3f' % max(demo_pred_score[demo_i])) + ' /  C : ' + str(demo_pred_score[demo_i].index(max(demo_pred_score[demo_i]))+1))
-
+    '''
 
     '''
     clf: logistic regression
     the best score:
-    dataset: data_v5
-    age /   Best testing score: 0.428 /  C : 4.354
-    gender /   Best testing score: 0.697 /  C : 7.165
-    relationship /   Best testing score: 0.476 /  C : 0.558
+    dataset: data_v4
+    age /   Best testing score: 0.388 /  C : 1
+    gender /   Best testing score: 0.614 /  C : 9271
+    relationship /   Best testing score: 0.474 /  C : 1
     '''
 
     '''
     #plot confusion matrix at best k of microF1
-    best_c = [4.354, 7.165, 0.558]
+    best_c = [0.001, 9.271, 0.001]
     for c_i in range(len(best_c)):
         demo_pred = []
         clf = LogisticRegression(C = best_c[c_i], penalty='l1', solver='liblinear')
