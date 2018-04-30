@@ -224,7 +224,7 @@ def main():
     '''
 
     '''
-    clf: logistic regression
+    clf: SVM
     the best score:
     dataset: data_v4
     age /   Best testing score: 0.388 /  C : 1
@@ -232,21 +232,20 @@ def main():
     relationship /   Best testing score: 0.474 /  C : 1
     '''
 
-    '''
     #plot confusion matrix at best k of microF1
     best_c = [0.001, 9.271, 0.001]
     for c_i in range(len(best_c)):
         demo_pred = []
-        clf = LogisticRegression(C = best_c[c_i], penalty='l1', solver='liblinear')
+        clf = svm.SVC(random_state=2018, C = best_c[c_i])
 
         demo_pred = cross_val_predict(clf, user_data, user_demo[demo_list[c_i]], cv=5)
         cnf_matrix = confusion_matrix(user_demo[demo_list[c_i]], demo_pred)
         plt.figure()
         plt.tight_layout(pad=0.4, w_pad=1.0, h_pad=1.0)
         plot_confusion_matrix(cnf_matrix, classes=class_name[demo_list[c_i]], normalize=True, title=demo_list[c_i] + ' in C = ' + str(best_c[c_i]))
-        plt.savefig('super_lr_' + demo_list[c_i]+'.eps', format='eps', dpi=1000)
+        plt.savefig('super_svm_' + demo_list[c_i]+'.png', format='png', dpi=1000)
         #plt.show()
-    '''
+
 
     '''
     #plt microF1
