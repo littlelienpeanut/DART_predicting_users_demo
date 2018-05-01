@@ -74,17 +74,21 @@ def main():
     for km4_i in range(0, 672, 1):
         kmeans_v4.append(data_v4[km4_i])
 
+    kmeans_v4_model_c2 = KMeans(n_clusters = 2).fit(kmeans_v4)
     kmeans_v4_model_c3 = KMeans(n_clusters = 3).fit(kmeans_v4)
     kmeans_v4_model_c4 = KMeans(n_clusters = 4).fit(kmeans_v4)
     kmeans_v4_model_c5 = KMeans(n_clusters = 5).fit(kmeans_v4)
+    kmeans_v4_model_c6 = KMeans(n_clusters = 6).fit(kmeans_v4)
 
     #daily_v5 kmeans
     for km5_i in range(0, 672, 1):
         kmeans_v5.append(data_v5[km5_i])
 
+    kmeans_v5_model_c2 = KMeans(n_clusters = 2).fit(kmeans_v5)
     kmeans_v5_model_c3 = KMeans(n_clusters = 3).fit(kmeans_v5)
     kmeans_v5_model_c4 = KMeans(n_clusters = 4).fit(kmeans_v5)
     kmeans_v5_model_c5 = KMeans(n_clusters = 5).fit(kmeans_v5)
+    kmeans_v5_model_c6 = KMeans(n_clusters = 6).fit(kmeans_v5)
 
 
     #daily_mix kmeans
@@ -97,18 +101,20 @@ def main():
         tmp_list = data_v4[kmm_i] + data_v5[kmm_i]
         kmeans_mix.append(tmp_list)
 
+    kmeans_mix_model_c2 = KMeans(n_clusters = 2).fit(kmeans_mix)
     kmeans_mix_model_c3 = KMeans(n_clusters = 3).fit(kmeans_mix)
     kmeans_mix_model_c4 = KMeans(n_clusters = 4).fit(kmeans_mix)
     kmeans_mix_model_c5 = KMeans(n_clusters = 5).fit(kmeans_mix)
+    kmeans_mix_model_c6 = KMeans(n_clusters = 6).fit(kmeans_mix)
 
-
+    '''
     #others
     #print n_clusters=3 feature: user_daily_v4 result
     #id_index is user_id - 1
     km4_c3 = {"0":[], "1":[], "2":[]}
     for o_i in range(0, 672, 1):
         km4_c3[str(kmeans_v4_model_c3.labels_[o_i])].append(o_i)
-    '''
+
     print("k4_c3_0 " + str(km4_c3["0"]))
     print("")
     print("k4_c3_1 " + str(km4_c3["1"]))
@@ -116,7 +122,6 @@ def main():
     print("k4_c3_2 " + str(km4_c3["2"]))
     print("")
     print("")
-    '''
 
     with open("cluster_0_demo.csv", "w") as fout:
         wr = csv.writer(fout)
@@ -180,25 +185,43 @@ def main():
             except:
                 pass
             #print("user: " + str(user_id_list["id"][user_index+1]) + " does not have demographic data.")
+    '''
+
     #print silhouette score
+    silhouette_k4_c2 = metrics.silhouette_score(kmeans_v4, kmeans_v4_model_c2.labels_)
+    print("k4_c2_score: " + str(silhouette_k4_c2))
     silhouette_k4_c3 = metrics.silhouette_score(kmeans_v4, kmeans_v4_model_c3.labels_)
     print("k4_c3_score: " + str(silhouette_k4_c3))
     silhouette_k4_c4 = metrics.silhouette_score(kmeans_v4, kmeans_v4_model_c4.labels_)
     print("k4_c4_score: " + str(silhouette_k4_c4))
     silhouette_k4_c5 = metrics.silhouette_score(kmeans_v4, kmeans_v4_model_c5.labels_)
     print("k4_c5_score: " + str(silhouette_k4_c5))
+    silhouette_k4_c6 = metrics.silhouette_score(kmeans_v4, kmeans_v4_model_c6.labels_)
+    print("k4_c6_score: " + str(silhouette_k4_c6))
+    print('')
+
+    silhouette_k5_c2 = metrics.silhouette_score(kmeans_v5, kmeans_v5_model_c2.labels_)
+    print("k5_c2_score: " + str(silhouette_k5_c2))
     silhouette_k5_c3 = metrics.silhouette_score(kmeans_v5, kmeans_v5_model_c3.labels_)
     print("k5_c3_score: " + str(silhouette_k5_c3))
     silhouette_k5_c4 = metrics.silhouette_score(kmeans_v5, kmeans_v5_model_c4.labels_)
     print("k5_c4_score: " + str(silhouette_k5_c4))
     silhouette_k5_c5 = metrics.silhouette_score(kmeans_v5, kmeans_v5_model_c5.labels_)
     print("k5_c5_score: " + str(silhouette_k5_c5))
+    silhouette_k5_c6 = metrics.silhouette_score(kmeans_v5, kmeans_v5_model_c6.labels_)
+    print("k5_c6_score: " + str(silhouette_k5_c6))
+    print('')
+
+    silhouette_km_c2 = metrics.silhouette_score(kmeans_mix, kmeans_mix_model_c2.labels_)
+    print("km_c2_score: " + str(silhouette_km_c2))
     silhouette_km_c3 = metrics.silhouette_score(kmeans_mix, kmeans_mix_model_c3.labels_)
     print("km_c3_score: " + str(silhouette_km_c3))
     silhouette_km_c4 = metrics.silhouette_score(kmeans_mix, kmeans_mix_model_c4.labels_)
     print("km_c4_score: " + str(silhouette_km_c4))
     silhouette_km_c5 = metrics.silhouette_score(kmeans_mix, kmeans_mix_model_c5.labels_)
     print("km_c5_score: " + str(silhouette_km_c5))
+    silhouette_km_c6 = metrics.silhouette_score(kmeans_mix, kmeans_mix_model_c6.labels_)
+    print("km_c6_score: " + str(silhouette_km_c6))
 
 
 
