@@ -5,8 +5,8 @@ from sklearn.model_selection import cross_val_predict
 from sklearn.model_selection import cross_val_score
 from sklearn.cluster import KMeans
 import random
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.cross_validation import train_test_split
-from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import f1_score
 import matplotlib.pyplot as plt
@@ -276,7 +276,7 @@ def main():
 
     #main
     '''
-    #find the best k in every clusters
+    #find the best depth in every clusters
     #hyper parameter settings
     #how many clusters?
     n_clusters = 6
@@ -317,7 +317,7 @@ def main():
         ### classifier choosing
         demo_pred_res.update({'age':[], 'gender':[], 'relationship':[], 'income':[], 'edu':[]})
         kms_demo_label.update({'age':[], 'gender':[], 'relationship':[], 'income':[], 'edu':[]})
-        clf = KNeighborsClassifier(n_neighbors=k)
+        clf = RandomForestClassifier(max_depth=k, random_state=2018, class_weight='balanced')
 
         for c_num in range(n_clusters):
             for demo_i in demo_list:
@@ -331,24 +331,24 @@ def main():
 
 
 
-    #print the best f1-micro with k_value
+    #print the best f1-micro with max depth
     print('')
     print('cnum: ' + str(n_clusters))
     for demo_i in demo_list:
-        print(demo_i + ' /   Best testing score: ' + str(max(demo_pred_score[demo_i])) + ' /  k : ' + str(demo_pred_score[demo_i].index(max(demo_pred_score[demo_i]))+1))
+        print(demo_i + ' /   Best testing score: ' + str(max(demo_pred_score[demo_i])) + ' /  max depth : ' + str(demo_pred_score[demo_i].index(max(demo_pred_score[demo_i]))+1))
     '''
 
     '''
-    clf: knn
+    clf: random forests
     the best score:
-    age /   Best testing score: 0.435 /  k : 19 / data_v5 / cnum = 3
-    gender /   Best testing score: 0.618 /  k : 14 / data_all / cnum = 5
-    relationship /   Best testing score: 0.482 /  k : 2 / data_all / cnum = 3
+    age /   Best testing score: 0.419 /  d : 16 / data_v5 / cnum = 2
+    gender /   Best testing score: 0.687 /  d : 3 / data_all / cnum = 2
+    relationship /   Best testing score: 0.511 /  d : 8 / data_all / cnum = 4
     '''
 
     #plot confusion matrix at best k of microF1
-    best_k = [19, 14, 2]
-    best_cnum = [3, 5, 3]
+    best_k = [16, 3, 8]
+    best_cnum = [2, 2, 4]
     best_data = [data_v5, data_all, data_all]
 
     for c in range(len(best_cnum)):
@@ -383,7 +383,7 @@ def main():
         demo_pred = []
         demo_label = []
 
-        clf = KNeighborsClassifier(n_neighbors = best_k[c])
+        clf = RandomForestClassifier(max_depth=best_k[c], random_state=2018, class_weight='balanced')
 
         for c_num in range(n_clusters):
             demo_pred.extend(cross_val_predict(clf, kms_data[str(c_num)], kms_demo[str(c_num)][demo_list[c]], cv=5))
@@ -392,9 +392,9 @@ def main():
         cnf_matrix = confusion_matrix(demo_label, demo_pred)
         plt.figure()
         plt.tight_layout(pad=0.4, w_pad=1.0, h_pad=1.0)
-        plot_confusion_matrix(cnf_matrix, classes=class_name[demo_list[c]], normalize=True, title=demo_list[c] + ' in k = ' + str(best_k[c]) + ' and cluster number = ' + str(n_clusters))
-        plt.savefig('kms_knn_' + demo_list[c] + '.eps', format='eps', dpi=1000)
-        #plt.show()
+        plot_confusion_matrix(cnf_matrix, classes=class_name[demo_list[c]], normalize=True, title=demo_list[c] + ' in max_depth = ' + str(best_k[c]) + ' and cluster number = ' + str(n_clusters))
+        plt.savefig('kms_rf_' + demo_list[c] + '.eps', format='eps', dpi=1000)
+        plt.show()
 
 
 

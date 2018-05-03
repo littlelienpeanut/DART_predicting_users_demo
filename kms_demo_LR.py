@@ -5,8 +5,8 @@ from sklearn.model_selection import cross_val_predict
 from sklearn.model_selection import cross_val_score
 from sklearn.cluster import KMeans
 import random
+from sklearn.linear_model import LogisticRegression
 from sklearn.cross_validation import train_test_split
-from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import f1_score
 import matplotlib.pyplot as plt
@@ -276,7 +276,7 @@ def main():
 
     #main
     '''
-    #find the best k in every clusters
+    #find the best depth in every clusters
     #hyper parameter settings
     #how many clusters?
     n_clusters = 6
@@ -313,11 +313,11 @@ def main():
         for demo_i in demo_list:
             kms_demo[str(kms_model.labels_[o_i])][demo_i].append(user_demo[o_i][demo_i])
 
-    for k in range(1, 21, 1):
+    for k in range(1, 10001, 1):
         ### classifier choosing
         demo_pred_res.update({'age':[], 'gender':[], 'relationship':[], 'income':[], 'edu':[]})
         kms_demo_label.update({'age':[], 'gender':[], 'relationship':[], 'income':[], 'edu':[]})
-        clf = KNeighborsClassifier(n_neighbors=k)
+        clf = LogisticRegression(C = k * 0.001, penalty='l1', solver='liblinear', random_state=2018)
 
         for c_num in range(n_clusters):
             for demo_i in demo_list:
@@ -331,25 +331,25 @@ def main():
 
 
 
-    #print the best f1-micro with k_value
+    #print the best f1-micro with max depth
     print('')
     print('cnum: ' + str(n_clusters))
     for demo_i in demo_list:
-        print(demo_i + ' /   Best testing score: ' + str(max(demo_pred_score[demo_i])) + ' /  k : ' + str(demo_pred_score[demo_i].index(max(demo_pred_score[demo_i]))+1))
+        print(demo_i + ' /   Best testing score: ' + str(max(demo_pred_score[demo_i])) + ' /  C: ' + str(demo_pred_score[demo_i].index(max(demo_pred_score[demo_i]))+1))
     '''
 
     '''
-    clf: knn
+    clf: logistic regression
     the best score:
-    age /   Best testing score: 0.435 /  k : 19 / data_v5 / cnum = 3
-    gender /   Best testing score: 0.618 /  k : 14 / data_all / cnum = 5
-    relationship /   Best testing score: 0.482 /  k : 2 / data_all / cnum = 3
+    age /   Best testing score: 0.456 /  C : 5.188 / data_v5 / cnum = 5
+    gender /   Best testing score: 0.675 /  C : 9.907 / data_v5 / cnum = 2
+    relationship /   Best testing score: 0.498 /  C : 2.577 / data_v5 / cnum = 3
     '''
 
     #plot confusion matrix at best k of microF1
-    best_k = [19, 14, 2]
-    best_cnum = [3, 5, 3]
-    best_data = [data_v5, data_all, data_all]
+    best_k = [5.188, 9.907, 2.577]
+    best_cnum = [5, 2, 3]
+    best_data = [data_v5, data_v5, data_v5]
 
     for c in range(len(best_cnum)):
         kms_data = []
@@ -383,7 +383,7 @@ def main():
         demo_pred = []
         demo_label = []
 
-        clf = KNeighborsClassifier(n_neighbors = best_k[c])
+        clf = LogisticRegression(C = best_k[c], penalty='l1', solver='liblinear')
 
         for c_num in range(n_clusters):
             demo_pred.extend(cross_val_predict(clf, kms_data[str(c_num)], kms_demo[str(c_num)][demo_list[c]], cv=5))
@@ -392,8 +392,8 @@ def main():
         cnf_matrix = confusion_matrix(demo_label, demo_pred)
         plt.figure()
         plt.tight_layout(pad=0.4, w_pad=1.0, h_pad=1.0)
-        plot_confusion_matrix(cnf_matrix, classes=class_name[demo_list[c]], normalize=True, title=demo_list[c] + ' in k = ' + str(best_k[c]) + ' and cluster number = ' + str(n_clusters))
-        plt.savefig('kms_knn_' + demo_list[c] + '.eps', format='eps', dpi=1000)
+        plot_confusion_matrix(cnf_matrix, classes=class_name[demo_list[c]], normalize=True, title=demo_list[c] + ' in C = ' + str(best_k[c]) + ' and cluster number = ' + str(n_clusters))
+        plt.savefig('kms_lr_' + demo_list[c] + '.png', format='png', dpi=1000)
         #plt.show()
 
 
