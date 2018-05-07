@@ -240,7 +240,7 @@ def main():
     #main
     #hyper parameter settings
     #how many clusters?
-    n_clusters = 7
+    n_clusters = 6
 
     #which dataset?
     user_data = data_v5
@@ -275,10 +275,11 @@ def main():
             kms_pr[str(kms_model.labels_[o_i])][pr_list_i].append(pr[pr_list_i][o_i])
 
     for c_num in range(n_clusters):
-        for alpha_val in range(1, 130, 1):
+        for alpha_val in range(1, 10001, 1):
             ### classifier choosing
-            clf = linear_model.Ridge(alpha = alpha_val*0.1)
-            print("cluster: " + str(c_num) + ' alpha_val: ' + str(alpha_val*0.1))
+            clf = linear_model.ElasticNet(alpha = alpha_val*0.001, random_state=2018)
+
+            print("cluster: " + str(c_num) + ' alpha_val: ' + str(alpha_val*0.001))
             for pr_list_i in pr_list:
                 tmp_rmse_pred[str(c_num)][pr_list_i].append(cv_testing_rmse(clf, kms_data[str(c_num)], kms_pr[str(c_num)][pr_list_i]))
                 tmp_rmse_base[str(c_num)][pr_list_i].append(rmse_mean(kms_pr[str(c_num)][pr_list_i]))
@@ -319,14 +320,18 @@ def main():
     '''
 
     #print the best testing rmse
+    print('EN')
+    print('data_v5')
+    print(str(n_clusters))
     for pr_i in pr_list:
-        print(pr_i + ':  best testing rmse: ' + str(min(rmse_pred[pr_i])) + ' alpha_val: ' + str('%.1f' % (rmse_pred[pr_i].index(min(rmse_pred[pr_i]))*0.1)) )
+        print(pr_i + ':  best testing rmse: ' + str(min(rmse_pred[pr_i])) + ' alpha_val: ' + str((rmse_pred[pr_i].index(min(rmse_pred[pr_i])))+1))
 
+    '''
     print("")
     print("rmse of data_all baseline")
     for pr in pr_list:
         print(pr + ':  ' + str(rmse_base[pr][0]))
-
+    '''
 
     #plot
     '''
