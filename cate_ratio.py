@@ -1,43 +1,60 @@
 import pandas as pd
 import csv
 
-def load_bh(fname):
-    data = pd.read_csv(fname)
-    return data['cate']
+
+def new_day(cate_list, day, date):
+    date.update({day:{}})
+    for cate in cate_list:
+        date[day].update({cate:0})
+
+def load_cate_list():
+    list = []
+    csv = pd.read_csv("cate_list_new.csv")
+    for i in range(len(csv)):
+        list.append(csv["cate"][i])
+    return list
+
 
 def main():
-    cate_list = pd.read_csv('cate_list_final.csv')
-    cate_count = {}
     fname = []
-    total_count = 0
+    cate_list = load_cate_list()
+    date = {}
 
-    for cate_name in cate_list['cate']:
-        cate_count.update({cate_name:0})
+    for data_num in range(1, 8, 1):
+        fname.append('all_user_csv_out_v3_' + str(data_num) + '.csv')
 
-    for fname_i in range(1, 8, 1):
-        fname.append('all_user_csv_out_v2_' + str(fname_i) + '.csv')
+    for fn in range(len(fname)):
+        df = pd.read_csv(fname[fn])
+        for raw in range(len(df)):
+            print('file: ' + str(fn+1) + ' ' + str(raw) + '/' + str(len(df)))
+            if df['visit_time'][raw][:10] in date.keys():
+                date[df['visit_time'][raw][:10]][df['cate'][raw]] += 1
 
-    for name in fname:
-        data = load_bh(name)
-        for row_i in range(len(data)):
-            print(name + ' ' + str(row_i) + ' / ' + str(len(data)))
-            cate_count[data[row_i]] += 1
-            total_count += 1
+            else:
+                new_day(cate_list, df['visit_time'][raw][:10], date)
+                date[df['visit_time'][raw][:10]][df['cate'][raw]] += 1
 
-    for cate_name in cate_list['cate']:
-        cate_count[cate_name] = cate_count[cate_name] / float(total_count)
-
-    print('total: ' + str(total_count))
-
-    with open('cate_ratio.csv', 'w') as fout:
+    with open('cate_day_ratio.csv', 'w', newline='') as fout:
         wr = csv.writer(fout)
-        wr.writerow(cate_list['cate'])
+        title = ['date']
+        title.extend(cate_list)
+        wr.writerow(title)
 
-        value = []
-        for cate_name in cate_list['cate']:
-            value.append(cate_count[cate_name])
+        for key, value in date.items():
+            #key: date; value: dict{cate:num}
+            raw_value = []
+            raw_value.append(key)
+            for cate in cate_list:
+                raw_value.append(value[cate])
 
-        wr.writerow(value)
+            wr.writerow(raw_value)
+
+
+
+
+
+
+
 
 if __name__ == '__main__':
     main()
