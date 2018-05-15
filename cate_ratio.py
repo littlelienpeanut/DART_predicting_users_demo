@@ -25,14 +25,14 @@ def main():
 
     for fn in range(len(fname)):
         df = pd.read_csv(fname[fn])
-        for raw in range(len(df)):
-            print('file: ' + str(fn+1) + ' ' + str(raw) + '/' + str(len(df)))
-            if df['visit_time'][raw][:10] in date.keys():
-                date[df['visit_time'][raw][:10]][df['cate'][raw]] += 1
+        for row in range(len(df)):
+            print('file: ' + str(fn+1) + ' ' + str(row) + '/' + str(len(df)))
+            if df['visit_time'][row][:10] in date.keys():
+                date[df['visit_time'][row][:10]][df['cate'][row]] += 1
 
             else:
-                new_day(cate_list, df['visit_time'][raw][:10], date)
-                date[df['visit_time'][raw][:10]][df['cate'][raw]] += 1
+                new_day(cate_list, df['visit_time'][row][:10], date)
+                date[df['visit_time'][row][:10]][df['cate'][row]] += 1
 
     with open('cate_day_ratio.csv', 'w', newline='') as fout:
         wr = csv.writer(fout)
@@ -42,12 +42,12 @@ def main():
 
         for key, value in date.items():
             #key: date; value: dict{cate:num}
-            raw_value = []
-            raw_value.append(key)
+            row_value = []
+            row_value.append(key)
             for cate in cate_list:
-                raw_value.append(value[cate])
+                row_value.append(value[cate])
 
-            wr.writerow(raw_value)
+            wr.writerow(row_value)
 
 
 

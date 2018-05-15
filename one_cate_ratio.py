@@ -16,15 +16,15 @@ def main():
     #which cate wanna calculate?
     cate_name = 'Travel'
 
-    for raw in range(len(df)):
+    for row in range(len(df)):
         day_total_click = 0
         day_cate_click = 0
         tmp_ratio = 0
         for cate in cate_list:
             if cate == cate_name:
-                day_cate_click = df[cate][raw]
+                day_cate_click = df[cate][row]
 
-            day_total_click += df[cate][raw]
+            day_total_click += df[cate][row]
 
         cate_ratio.append(day_cate_click/float(day_total_click))
 
@@ -33,10 +33,10 @@ def main():
         title = ['date', 'ratio']
         wr.writerow(title)
 
-        for raw in range(len(cate_ratio)):
+        for row in range(len(cate_ratio)):
             value = []
-            value.append(df['date'][raw])
-            value.append(cate_ratio[raw])
+            value.append(df['date'][row])
+            value.append(cate_ratio[row])
 
             wr.writerow(value)
 
