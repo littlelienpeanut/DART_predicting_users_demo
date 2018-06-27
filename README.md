@@ -12,9 +12,9 @@ Demographic information prediction:
 3. supervise_demo_LR.py (predicting user's demographic information in logistic regression)
 4. supervise_demo_SVM.py (predicting user's demographic information in SVM)
 5. kms_demo_KNN.py (predicting user's demographic information in clustering with k-NN)
-6. kms_demo_KNN.py (predicting user's demographic information in clustering with random forests)
-7. kms_demo_KNN.py (predicting user's demographic information in clustering with logistic regression)
-8. kms_demo_KNN.py (predicting user's demographic information in clustering with SVM)
+6. kms_demo_RF.py (predicting user's demographic information in clustering with random forests)
+7. kms_demo_LR.py (predicting user's demographic information in clustering with logistic regression)
+8. kms_demo_SVM.py (predicting user's demographic information in clustering with SVM)
 
 Big-six personality prediction:
 1. supervise_pr_SVM.py (predicting user's big-six personality in SVR) 
